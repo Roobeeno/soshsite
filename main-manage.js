@@ -12,9 +12,6 @@ import {
   setDoc
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
-// ========== Configuration ==========
-const EDITOR_EMAIL = "robin.faith14@gmail.com";  // <-- change to your Firebase user email
-
 // ========== Firestore References ==========
 const transactionsRef = collection(db, "transactions");
 const eventsRef = collection(db, "events");
@@ -30,15 +27,20 @@ let sortDirections = {};
 let chartMode = "incomeEvent";
 
 // ---------- LOGIN ----------
-window.validatePassword = async function () {
-  const password = document.getElementById('password').value;
+window.validateLogin = async function () {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
   try {
-    await signInWithEmailAndPassword(auth, EDITOR_EMAIL, password);
-    document.getElementById('content').style.display = 'block';
-    document.getElementById('loginSection').style.display = 'none';
-  } catch (err) {
-    alert("Incorrect password or login failed.");
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    document.getElementById("loginSection").style.display = "none";
+    document.getElementById("content").style.display = "block";
+
+    const user = userCredential.user;
+    console.log("Logged in as:", user.email);
+    console.log("UID:", user.uid);
+  } catch (error) {
+    alert("Login failed: " + error.message);
   }
 };
 
@@ -112,8 +114,8 @@ window.addRow = async function () {
   clearInputs();
 };
 
-// ---------- ADD EVENT (right-click) ----------
-async function addEvent() {
+// ---------- ADD EVENT ----------
+window.addEvent = async function addEvent() {
   const newEvent = prompt("Create New Event");
   if (!newEvent) return;
 
@@ -127,14 +129,23 @@ async function addEvent() {
   await addDoc(eventsRef, { name: newEvent });
 }
 
-function addEventsEventListener() {
-  const events = document.getElementById("events");
-  events.addEventListener('contextmenu', function (e) {
-    e.preventDefault();
-    addEvent();
+function populateEventsDropdown() {
+  const select = document.getElementById("events");
+  select.innerHTML = ""; // Clear current options
+
+  onSnapshot(eventsRef, (snapshot) => {
+    select.innerHTML = ""; // Clear again on every update
+    snapshot.forEach(doc => {
+      const eventName = doc.data().name;
+      const option = document.createElement("option");
+      option.value = eventName;
+      option.textContent = eventName;
+      select.appendChild(option);
+    });
   });
 }
-addEventsEventListener();
+
+populateEventsDropdown()
 
 // ---------- DEPOSITS (right-click) ----------
 document.getElementById("totalAmount").addEventListener("contextmenu", async (e) => {

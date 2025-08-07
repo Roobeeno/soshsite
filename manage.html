@@ -9,8 +9,9 @@
 </head>
 <body>
   <div id="loginSection">
+    <input type="email" id="email" placeholder="Enter Email" />
     <input type="password" id="password" placeholder="Enter Password" />
-    <button onclick="validatePassword()">Login</button>
+    <button onclick="validateLogin()">Login</button>
   </div>
 
   <div id="content" style="display:none">
@@ -19,6 +20,7 @@
 
     <div class="form-inputs">
       <select id="events"></select>
+      <button onclick="addEvent()">＋</button>
       <input type="text" id="date" placeholder="MM/DD/YYYY" />
       <input type="text" id="transactionAmount" placeholder="Transaction Amount" />
       <select id="categories">
