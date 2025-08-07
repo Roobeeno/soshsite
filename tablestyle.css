@@ -1,0 +1,143 @@
+.fira-sans-regular {font-family: "Fira Sans", sans-serif;font-weight: 400;font-style: normal;}body{font-family:'inter',sans-serif;background-color:#D8F2EF;padding:20px;text-align:center;}h2{font-size:20px;margin-bottom:10px;}.form-inputs{margin-bottom:20px;}.form-inputs input,.form-inputs select{margin:6px;padding:8px;font-size:14px;}#submission{background-color:#003F91;color:white;border:none;border-radius:4px;cursor:pointer;}table{margin:20px auto;width:90%;background-color:white;border-collapse:collapse;}#main_table th{border:none;background-color:#f2f2f2;padding:10px;}#main_table td{border:none;padding:10px;}tr:nth-child(even){background-color:#f2f2f2;}.table-container{padding:0;margin:0;border:none;overflow-x:auto;}.table-container table{margin:0;border-collapse:collapse;width:100%;}.chart-container{margin:40px auto;max-width:600px;}.table-container{max-height:250px;overflow-y:auto;margin:20px auto;width:90%;background-color:white;border:1px solid black;border-radius:8px;}.parent{display:flex;align-items:flex-start;text-align:center;justify-content:center;align-items:center;}.child{display:inline-block;vertical-align:middle;}.my-chart{width:100%!important;height:100%!important;}.hidden{display:none;}.form-inputs input,.form-inputs select{margin:6px;padding:8px;font-size:14px;border:1px solid #ccc;border-radius:0;background-color:white;font-family:'inter',sans-serif;height:34px;box-sizing:border-box;}.form-inputs select{appearance:none;-webkit-appearance:none;-moz-appearance:none;background-image:url('data:image/svg+xml;utf8,<svg fill="gray" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');background-repeat:no-repeat;background-position-x:calc(100% - 10px);background-position-y:center;background-size:16px 16px;padding-right:30px;}.topnav a{color:black;font-family:"Fira Sans",sans-serif;padding:1vw;}.topnav a:hover{color:yellow;}.fira-sans-regular {
+    font-family: "Fira Sans", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+  }
+  
+  body {
+    font-family: 'inter', sans-serif;
+    background-color: #D8F2EF;
+    padding: 20px;
+    text-align: center;
+  }
+  
+  h2 {
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+  
+  .form-inputs {
+    margin-bottom: 20px;
+  }
+  
+  .form-inputs input,
+  .form-inputs select {
+    margin: 6px;
+    padding: 8px;
+    font-size: 14px;
+  }
+  
+  #submission {
+    background-color: #003F91;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  table {
+    margin: 20px auto;
+    width: 90%;
+    background-color: white;
+    border-collapse: collapse;
+  }
+  
+  #main_table th {
+    border: none;
+    background-color: #f2f2f2;
+    padding: 10px;
+  }
+  
+  #main_table td {
+    border: none;
+    padding: 10px;
+  }
+  
+  tr:nth-child(even) {
+    background-color: #f2f2f2;
+  }
+  
+  .table-container {
+    padding: 0;
+    margin: 0;
+    border: none;
+    overflow-x: auto;
+  }
+  
+  .table-container table {
+    margin: 0;
+    border-collapse: collapse;
+    width: 100%;
+  }
+  
+  .chart-container {
+    margin: 40px auto;
+    max-width: 600px;
+  }
+  
+  .table-container {
+    max-height: 250px;
+    overflow-y: auto;
+    margin: 20px auto;
+    width: 90%;
+    background-color: white;
+    border: 1px solid black;
+    border-radius: 8px;
+  }
+  
+  .parent {
+    display: flex;
+    align-items: flex-start;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .child {
+    display: inline-block;
+    vertical-align: middle;
+  }
+  
+  .my-chart {
+    width: 100% !important;
+    height: 100% !important;
+  }
+  
+  .hidden {
+    display: none;
+  }
+  
+  .form-inputs input,
+  .form-inputs select {
+    margin: 6px;
+    padding: 8px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 0;
+    background-color: white;
+    font-family: 'inter', sans-serif;
+    height: 34px;
+    box-sizing: border-box;
+  }
+  
+  .form-inputs select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url('data:image/svg+xml;utf8,<svg fill="gray" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+    background-repeat: no-repeat;
+    background-position-x: calc(100% - 10px);
+    background-position-y: center;
+    background-size: 16px 16px;
+    padding-right: 30px;
+  }
+  
+  .topnav a {
+    color: black;
+    font-family: "Fira Sans", sans-serif;
+    padding: 1vw;
+  }
+  
+  .topnav a:hover {
+    color: yellow;
+  }

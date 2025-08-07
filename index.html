@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Sosh Comm Budgeting - Public View</title>
+        <link rel="stylesheet" href="tablestyle.css" />
+        <script src="https://cdn.jsdelivr.net/npm/chart.js">
+        </script>
+        </head>
+        <body>
+            <h1>Sosh Comm Budgeting</h1>
+            <h2>Current Balance: $<span id="totalAmount">0.00</span></h2>
+            <div class="table-container">
+                <table id="main_table">
+                    <thead>
+                        <tr>
+                            <th>Event</th>
+                            <th>Date</th>
+                            <th>Amount ($)</th>
+                            <th>Category</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="chart-container">
+                <select id="chartModeSelector">
+                    <option value="incomeEvent">Income by Event</option>
+                    <option value="expenseEvent">Expenditure by Event</option>
+                    <option value="incomeCategory">Income by Category</option>
+                    <option value="expenseCategory">Expenditure by Category</option>
+                </select><canvas class="my-chart"></canvas><div class="details">
+                    <ul style="list-style:none;text-align:right;"></ul>
+                </div>
+            </div>
+            <script type="module" src="firebase-init.js"></script>
+            <script type="module" src="main-readonly.js"></script>
+        </body>
+        </html>
