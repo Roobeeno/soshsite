@@ -6,10 +6,8 @@ let chartMode = "incomeEvent";
 let categoryTotals = {
   FoodAndBev:0, Alcohol:0, Decor:0, Services:0, Reimbursement:0, Dues:0, Door:0, Fine:0, Other:0
 };
-let deposits = 0;
 
 const transactionsRef = collection(db, "transactions");
-const depositsRef = doc(db, "meta/deposits");
 
 onSnapshot(transactionsRef, snapshot => {
   const tbody = document.getElementById("main_table").tBodies[0];
@@ -29,11 +27,6 @@ onSnapshot(transactionsRef, snapshot => {
   updateChart(); updateTotal(); updateTextList();
 });
 
-onSnapshot(depositsRef, docSnap => {
-  deposits = docSnap.exists() ? Number(docSnap.data().value || 0) : 0;
-  updateTotal();
-});
-
 document.getElementById("chartModeSelector").addEventListener("change", (e)=>{
   chartMode = e.target.value;
   updateChart();
@@ -41,7 +34,7 @@ document.getElementById("chartModeSelector").addEventListener("change", (e)=>{
 
 function updateTotal() {
   let total = Object.values(categoryTotals).reduce((a,b)=>a+b,0);
-  document.getElementById("totalAmount").textContent = (total+deposits).toFixed(2);
+  document.getElementById("totalAmount").textContent = (total).toFixed(2);
 }
 function updateTextList() {
   const ul = document.querySelector(".details ul");
@@ -65,6 +58,11 @@ function getChartData() {
     if(chartMode==="expenseEvent" && amount<0) events[event]+=-amount;
     if(chartMode==="incomeCategory" && amount>0) categories[category]+=amount;
     if(chartMode==="expenseCategory" && amount<0) categories[category]+=-amount;
+    if(chartMode==="netEvent") events[event]+=amount;
+    if(chartMode==="netCategory") categories[category]+=amount;
+
+    // <option value="netEvent">Net by Event</option>
+    // <option value="netCategory">Net by Category</option>
   }
   const labels = chartMode.includes("Event")?Object.keys(events):Object.keys(categories);
   const data = chartMode.includes("Event")?Object.values(events):Object.values(categories);

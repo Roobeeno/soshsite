@@ -15,14 +15,13 @@ import {
 // ========== Firestore References ==========
 const transactionsRef = collection(db, "transactions");
 const eventsRef = collection(db, "events");
-const depositsRef = doc(db, "meta/deposits");
 
 let chartInstance;
 let categoryTotals = {
   FoodAndBev: 0, Alcohol: 0, Decor: 0, Services: 0,
   Reimbursement: 0, Dues: 0, Door: 0, Fine: 0, Other: 0
 };
-let deposits = 0;
+
 let sortDirections = {};
 let chartMode = "incomeEvent";
 
@@ -54,13 +53,11 @@ document.getElementById("clearDataBtn").addEventListener("click", async () => {
   if (!confirm("Are you sure you want to delete all saved data?")) return;
   const snap = await getDocs(transactionsRef);
   snap.forEach(d => deleteDoc(doc(db, "transactions", d.id)));
-  await setDoc(depositsRef, { value: 0 });
 
   categoryTotals = {
     FoodAndBev: 0, Alcohol: 0, Decor: 0, Services: 0,
     Reimbursement: 0, Dues: 0, Door: 0, Fine: 0, Other: 0
   };
-  deposits = 0;
   document.getElementById("main_table").tBodies[0].innerHTML = "";
   updateChart(); updateTotal(); updateTextList();
 });
@@ -91,12 +88,6 @@ onSnapshot(eventsRef, (snapshot) => {
   });
 });
 
-onSnapshot(depositsRef, (docSnap) => {
-  if (docSnap.exists()) {
-    deposits = Number(docSnap.data().value || 0);
-    updateTotal();
-  }
-});
 
 // ---------- ADD TRANSACTION ----------
 window.addRow = async function () {
@@ -147,16 +138,6 @@ function populateEventsDropdown() {
 
 populateEventsDropdown()
 
-// ---------- DEPOSITS (right-click) ----------
-document.getElementById("totalAmount").addEventListener("contextmenu", async (e) => {
-  e.preventDefault();
-  const inputVal = prompt("Input deposit");
-  if (isNaN(inputVal)) return alert("Please enter a valid number");
-  deposits += Number(inputVal);
-  await setDoc(depositsRef, { value: deposits });
-  updateTotal();
-});
-
 // ---------- DELETE ROW ----------
 async function deleteInfo(docId) {
   if (confirm("Are you sure you want to delete this row?")) {
@@ -178,7 +159,7 @@ function addTableRow(item, docId) {
 // ---------- UTILITY FUNCTIONS ----------
 function updateTotal() {
   let total = Object.values(categoryTotals).reduce((acc, val) => acc + val, 0);
-  document.getElementById("totalAmount").textContent = (Number(total) + Number(deposits)).toFixed(2);
+  document.getElementById("totalAmount").textContent = (Number(total)).toFixed(2);
 }
 
 function clearInputs() {
@@ -221,6 +202,8 @@ function getChartData() {
     if (chartMode === "expenseEvent" && amount < 0) events[event] += -amount;
     if (chartMode === "incomeCategory" && amount > 0) categories[category] += amount;
     if (chartMode === "expenseCategory" && amount < 0) categories[category] += -amount;
+    if(chartMode==="netEvent") events[event]+=amount;
+    if(chartMode==="netCategory") categories[category]+=amount;
   }
 
   const labels = chartMode.includes("Event") ? Object.keys(events) : Object.keys(categories);
