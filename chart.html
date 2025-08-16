@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sosh Comm — Chart</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tablestyle.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body style="text-align:center; padding:20px;">
+  <h1 style="margin:0 0 10px;">Sosh Comm — Chart</h1>
+
+  <div style="margin: 10px 0 20px;">
+    <select id="chartModeSelector">
+      <option value="incomeEvent">Income by Event</option>
+      <option value="expenseEvent">Expenditure by Event</option>
+      <option value="incomeCategory">Income by Category</option>
+      <option value="expenseCategory">Expenditure by Category</option>
+      <option value="netEvent">Net by Event</option>
+      <option value="netCategory">Net by Category</option>
+    </select>
+  </div>
+
+  <div class="chart-container" style="max-width: 900px; margin: 0 auto;">
+    <canvas id="budgetChart"></canvas>
+  </div>
+
+  <script type="module" src="firebase-init.js"></script>
+  <script type="module" src="chart.js"></script>
+</body>
+</html>

@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <a style="float: right;" class="active" href="manage.html">Admin</a>
   <title>Sosh Comm Budgeting — Read-only</title>
 
   <!-- Font to match manage page -->
@@ -12,10 +11,13 @@
   <!-- Your styles (must include .cards, .txn-card, etc.) -->
   <link rel="stylesheet" href="tablestyle.css" />
 
-  <!-- Chart.js for the bar chart -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
+<body class = "readonly">
+
+    <ul style="float: right;">
+        <a class="active" style="margin: 10px; font-family: Montserrat" href="manage.html">Admin</a>
+        <a class="active" style="margin: 10px; font-family: Montserrat" href="chart.html">Chart</a>
+    </ul>
     
   <header style="text-align:center; margin: 20px 0;">
     <h1 style="margin:0;">Sosh Comm Budgeting (Read-only)</h1>
@@ -23,64 +25,24 @@
       Current Balance: $<span id="totalAmount">0.00</span>
     </h2>
   </header>
+  
 
   <!-- Sort bar for cards -->
 <div class="sortbar" style="text-align:center; margin: 4px 0 16px;">
-    <label style="margin-right:8px;">Sort by</label>
-    <select id="sortField">
-      <option value="date">Date</option>
-      <option value="amount">Amount</option>
-      <option value="event">Event</option>
-      <option value="category">Category</option>
-    </select>
-    <select id="sortDir" style="margin-left:8px;">
-      <option value="desc">Descending</option>
-      <option value="asc">Ascending</option>
-    </select>
-  </div>
+  <label style="margin-right:8px;">Sort by</label>
+  <select id="sortField">
+    <option value="date">Date</option>
+    <option value="amount">Amount</option>
+    <option value="event">Event</option>
+    <option value="category">Category</option>
+  </select>
+  <select id="sortDir" style="margin-left:8px;">
+    <option value="desc">Descending</option>
+    <option value="asc">Ascending</option>
+  </select>
+</div>
 
-  <!-- Chart mode selector -->
-  <div style="text-align:center; margin: 16px 0 24px;">
-    <select id="chartModeSelector">
-      <option value="incomeEvent">Income by Event</option>
-      <option value="expenseEvent">Expenditure by Event</option>
-      <option value="incomeCategory">Income by Category</option>
-      <option value="expenseCategory">Expenditure by Category</option>
-      <option value="netEvent">Net by Event</option>
-      <option value="netCategory">Net by Category</option>
-    </select>
-  </div>
-
-  <!-- Visible card list (matches manage page styling) -->
-  <div id="cards" class="cards"></div>
-
-  <!-- Hidden table (used for chart data aggregation) -->
-  <div class="table-container" style="display:none;">
-    <table id="main_table">
-      <thead>
-        <tr>
-          <th>Event</th>
-          <th>Date</th>
-          <th>Amount ($)</th>
-          <th>Category</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-
-  <!-- Chart canvas -->
-  <div class="chart-container" style="max-width: 900px; margin: 32px auto;">
-    <canvas class="my-chart"></canvas>
-  </div>
-
-  <!-- Category totals list -->
-  <div class="details" style="max-width:900px; margin: 0 auto 40px;">
-    <ul style="list-style:none; padding:0; margin:0; text-align:right;">
-      <!-- main-readonly.js will fill this -->
-    </ul>
-  </div>
+<div id="cards" class="cards"></div>
 
   <!-- Firebase + readonly logic -->
   <script type="module" src="firebase-init.js"></script>

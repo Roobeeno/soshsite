@@ -5,9 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sosh Comm Budgeting - Manage</title>
   <link rel="stylesheet" href="tablestyle.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
+<body class="manage">
   <div id="loginSection">
     <input type="email" id="email" placeholder="Enter Email" />
     <input type="password" id="password" placeholder="Enter Password" />
@@ -17,35 +16,15 @@
   <div id="content" style="display:none">
 
     <ul style="float: right;">
-      <a class="active" href="index.html">Back to Display</a>
-      <a class="active" href="inventory.html">Inventory</a>
+      <a class="active" style="margin: 10px;" href="index.html">Back to Display</a>
+      <a class="active" style="margin: 10px;" href="inventory.html">Inventory</a>
     </ul>
    
     <h1>Sosh Comm Budgeting (Management)</h1>
     <h2>Current Balance: $<span id="totalAmount">0.00</span></h2>
 
-    <!-- <div class="form-inputs">
-      <select id="events"></select>
-      <button onclick="addEvent()">＋</button>
-      <input type="text" id="date" placeholder="MM/DD/YYYY" />
-      <input type="text" id="transactionAmount" placeholder="Transaction Amount" />
-      <select id="categories">
-        <option value="FoodAndBev">Food &amp; Beverage</option>
-        <option value="Alcohol">Alcohol</option>
-        <option value="Decor">Decor</option>
-        <option value="Services">Service</option>
-        <option value="Reimbursement">Reimbursement</option>
-        <option value="Dues">Social Dues</option>
-        <option value="Door">Door Fee</option>
-        <option value="Fine">Fine</option>
-        <option value="Other">Other</option>
-      </select>
-      <input type="text" id="description" placeholder="Description of Purchase" />
-      <input type="button" value="Add Transaction" onclick="addRow();" />
-    </div>
-
     <!-- Manage toolbar (cards stay below this) -->
-<div class="manage-toolbar">
+  <div class="manage-toolbar">
   <!-- 1: Event -->
   <select id="events" class="rect-input" title="Event"></select>
 
@@ -79,34 +58,6 @@
 </div>
 
 <div id="cards" class="cards"></div>
-
-    <table id="main_table">
-      <thead>
-        <tr>
-          <th>Event</th>
-          <th>Date</th>
-          <th>Amount ($)</th>
-          <th>Category</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-
-    <select id="chartModeSelector">
-      <option value="incomeEvent">Income by Event</option>
-      <option value="expenseEvent">Expenditure by Event</option>
-      <option value="incomeCategory">Income by Category</option>
-      <option value="expenseCategory">Expenditure by Category</option>
-      <option value="netEvent">Net by Event</option>
-      <option value="netCategory">Net by Category</option>
-    </select>
-
-    <canvas class="my-chart"></canvas>
-
-    <div class="details">
-      <ul style="list-style:none;text-align:right;"></ul>
-    </div>
 
     <button id="clearDataBtn">Clear All Data</button>
   </div>

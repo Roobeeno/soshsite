@@ -1,21 +1,78 @@
-// main-readonly.js — cards-only view (no form, no animations), shares look with manage
+// main-readonly.js — cards-only view with FLIP sorting (no table, no chart)
 
 import { db } from "./firebase-init.js";
 import {
   collection,
-  onSnapshot
+  onSnapshot,
+  doc
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
-let chartInstance;
-let chartMode = "incomeEvent";
-let categoryTotals = {
-  FoodAndBev: 0, Alcohol: 0, Decor: 0, Services: 0,
-  Reimbursement: 0, Dues: 0, Door: 0, Fine: 0, Other: 0
-};
-
 const transactionsRef = collection(db, "transactions");
+const depositsRef     = doc(db, "meta/deposits");
 
-// --------- Build one card (same visual structure as manage) ----------
+let transactions = [];
+let deposits = 0;
+
+/* ===================== FLIP HELPERS ===================== */
+function capturePositions(container) {
+  const map = new Map();
+  Array.from(container.children).forEach(el => {
+    map.set(el, el.getBoundingClientRect());
+  });
+  return map;
+}
+
+function playFLIP(container, before) {
+  const after = new Map();
+  Array.from(container.children).forEach(el => {
+    after.set(el, el.getBoundingClientRect());
+  });
+
+  const reduced =
+    window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  after.forEach((afterBox, el) => {
+    const prior = before.get(el);
+    if (!prior) return;
+
+    const dx = prior.left - afterBox.left;
+    const dy = prior.top  - afterBox.top;
+
+    if (dx || dy) {
+      el.style.transform = `translate(${dx}px, ${dy}px)`;
+      el.style.transition = 'none';
+      requestAnimationFrame(() => {
+        // force layout
+        void el.offsetHeight;
+        el.style.transition = reduced ? 'none' : '';
+        el.style.transform = '';
+      });
+    }
+  });
+}
+
+/* ================ FIRESTORE SUBSCRIPTIONS ================ */
+onSnapshot(depositsRef, (docSnap) => {
+  deposits = docSnap.exists() ? Number(docSnap.data().value || 0) : 0;
+  updateTotal();
+});
+
+onSnapshot(transactionsRef, (snapshot) => {
+  transactions = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderCards(transactions);
+  updateTotal();
+  updateCategoryList(transactions);
+  applyCurrentSort(); // keep current sort after refresh
+});
+
+/* ======================== RENDER ========================= */
+function renderCards(items) {
+  const wrap  = document.getElementById("cards");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  items.forEach(item => wrap.appendChild(createCard(item.id, item)));
+}
+
 function createCard(docId, item) {
   const card = document.createElement('div');
   card.className = 'txn-card';
@@ -32,7 +89,7 @@ function createCard(docId, item) {
     </div>
     <div class="txn-mid">
       <div class="amount ${item.amount >= 0 ? 'positive' : 'negative'}">
-        ${item.amount >= 0 ? '$' : '-$'}${Math.abs(item.amount).toFixed(2)}
+        ${item.amount >= 0 ? '$' : '-$'}${Math.abs(Number(item.amount)).toFixed(2)}
       </div>
       <div class="desc">${item.description || ''}</div>
     </div>
@@ -40,102 +97,39 @@ function createCard(docId, item) {
       <div class="category">${item.category}</div>
     </div>
   `;
-  // Read-only: no right-click delete
+  // read-only: no delete handler
   return card;
 }
 
-// --------- FLIP utils for pretty resorting (optional) ----------
-function capturePositions(container) {
-  const map = new Map();
-  Array.from(container.children).forEach(el => {
-    map.set(el, el.getBoundingClientRect());
-  });
-  return map;
+/* ================== TOTALS + CATEGORY LIST ================= */
+function updateTotal() {
+  const sum = transactions.reduce((acc, t) => acc + Number(t.amount || 0), 0);
+  const el = document.getElementById("totalAmount");
+  if (el) el.textContent = (sum + Number(deposits)).toFixed(2);
 }
-function playFLIP(container, before) {
-  const after = new Map();
-  Array.from(container.children).forEach(el => {
-    after.set(el, el.getBoundingClientRect());
+
+function updateCategoryList(items) {
+  const totals = {};
+  items.forEach(t => {
+    const cat = t.category || "Other";
+    const amt = Number(t.amount) || 0;
+    totals[cat] = (totals[cat] || 0) + amt;
   });
-  const prefersReduced =
-    window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  after.forEach((afterBox, el) => {
-    const beforeBox = before.get(el);
-    if (!beforeBox) return;
-    const dx = beforeBox.left - afterBox.left;
-    const dy = beforeBox.top  - afterBox.top;
-    if (dx || dy) {
-      el.style.transform = `translate(${dx}px, ${dy}px)`;
-      el.style.transition = 'none';
-      requestAnimationFrame(() => {
-        // force style recalc
-        // eslint-disable-next-line no-unused-expressions
-        el.offsetHeight;
-        el.style.transition = prefersReduced ? 'none' : '';
-        el.style.transform = '';
-      });
-    }
+  const ul = document.querySelector(".details ul");
+  if (!ul) return;
+  ul.innerHTML = "";
+  Object.keys(totals).forEach(cat => {
+    const li = document.createElement("li");
+    li.innerHTML = `${cat}: <span class='percentage'>$${totals[cat].toFixed(2)}</span>`;
+    ul.appendChild(li);
   });
 }
 
-// --------- Realtime: render cards + keep hidden table for charts ---------
-onSnapshot(transactionsRef, (snapshot) => {
-  const wrap  = document.getElementById("cards");                    // visible cards
-  const tbody = document.getElementById("main_table")?.tBodies[0];   // hidden table for charts
-
-  // reset aggregates
-  categoryTotals = {
-    FoodAndBev: 0, Alcohol: 0, Decor: 0, Services: 0,
-    Reimbursement: 0, Dues: 0, Door: 0, Fine: 0, Other: 0
-  };
-
-  // rebuild cards (static—no add/remove animations on readonly)
-  if (wrap) {
-    wrap.innerHTML = "";
-    snapshot.forEach(docSnap => {
-      const item = docSnap.data();
-      wrap.appendChild(createCard(docSnap.id, item));
-    });
-    // keep current sort after refresh (if the controls exist)
-    applyCurrentSort();
-  }
-
-  // rebuild hidden table for chart calculations
-  if (tbody) {
-    tbody.innerHTML = "";
-    snapshot.forEach(docSnap => {
-      const item = docSnap.data();
-      const row = tbody.insertRow();
-      row.insertCell(0).textContent = item.event;
-      row.insertCell(1).textContent = item.date;
-      row.insertCell(2).textContent = Number(item.amount).toFixed(2);
-      row.insertCell(3).textContent = item.category;
-      row.insertCell(4).textContent = item.description || "";
-
-      if (!(item.category in categoryTotals)) categoryTotals[item.category] = 0;
-      categoryTotals[item.category] += Number(item.amount);
-    });
-  }
-
-  updateChart();
-  updateTotal();
-  updateTextList();
-});
-
-// --------- Chart mode selector ----------
-document.getElementById("chartModeSelector")?.addEventListener("change", (e) => {
-  chartMode = e.target.value;
-  updateChart();
-});
-
-// --------- Sorting controls (optional UI) ----------
-document.getElementById("sortField")?.addEventListener("change", applyCurrentSort);
-document.getElementById("sortDir")?.addEventListener("change", applyCurrentSort);
-
+/* ======================== SORTING ======================== */
+// expects cards carry data-*: event, date, amount, category
 function parseDateMMDDYYYY(s) {
-  // expects "MM/DD/YYYY"
   const [m, d, y] = (s || "").split("/").map(Number);
-  if (!m || !d || !y) return new Date(0); // earliest if malformed
+  if (!m || !d || !y) return new Date(0);
   return new Date(y, m - 1, d);
 }
 
@@ -164,87 +158,20 @@ function sortCards(field, dir) {
     return mult * av.localeCompare(bv);
   });
 
-  // Reattach in sorted order (LAST)
+  // LAST
   cards.forEach(c => wrap.appendChild(c));
 
-  // Invert + Play
+  // INVERT + PLAY
   playFLIP(wrap, before);
 }
 
 function applyCurrentSort() {
   const fieldSel = document.getElementById("sortField");
-  const dirSel = document.getElementById("sortDir");
+  const dirSel   = document.getElementById("sortDir");
   if (!fieldSel || !dirSel) return;
   sortCards(fieldSel.value, dirSel.value);
 }
 
-// --------- Totals / details ----------
-function updateTotal() {
-  const total = Object.values(categoryTotals).reduce((a, b) => a + b, 0);
-  const el = document.getElementById("totalAmount");
-  if (el) el.textContent = Number(total).toFixed(2);
-}
-
-function updateTextList() {
-  const ul = document.querySelector(".details ul");
-  if (!ul) return;
-  ul.innerHTML = "";
-  for (let cat in categoryTotals) {
-    const li = document.createElement("li");
-    li.innerHTML = `${cat}: <span class='percentage'>$${categoryTotals[cat].toFixed(2)}</span>`;
-    ul.appendChild(li);
-  }
-}
-
-// --------- Chart.js (reads from hidden table rows) ----------
-function getChartData() {
-  const events = {};
-  const categories = {};
-  const rows = document.getElementById("main_table")?.tBodies[0]?.rows || [];
-
-  for (let row of rows) {
-    const event = row.cells[0].textContent;
-    const category = row.cells[3].textContent;
-    const amount = parseFloat(row.cells[2].textContent) || 0;
-
-    if (!events[event]) events[event] = 0;
-    if (!categories[category]) categories[category] = 0;
-
-    if (chartMode === "incomeEvent"    && amount > 0) events[event] += amount;
-    if (chartMode === "expenseEvent"   && amount < 0) events[event] += -amount;
-    if (chartMode === "incomeCategory" && amount > 0) categories[category] += amount;
-    if (chartMode === "expenseCategory"&& amount < 0) categories[category] += -amount;
-    if (chartMode === "netEvent")      events[event] += amount;
-    if (chartMode === "netCategory")   categories[category] += amount;
-  }
-
-  const labels = chartMode.includes("Event") ? Object.keys(events) : Object.keys(categories);
-  const data   = chartMode.includes("Event") ? Object.values(events) : Object.values(categories);
-  return { labels, data };
-}
-
-function updateChart() {
-  const ctx = document.querySelector(".my-chart");
-  if (!ctx) return;
-  const chartData = getChartData();
-
-  if (chartInstance) {
-    chartInstance.data.labels = chartData.labels;
-    chartInstance.data.datasets[0].data = chartData.data;
-    chartInstance.update();
-  } else {
-    chartInstance = new Chart(ctx, {
-      type: "bar",
-      data: {
-        labels: chartData.labels,
-        datasets: [{ label: "Amount ($)", data: chartData.data, backgroundColor: "#457b9d" }]
-      },
-      options: {
-        responsive: true,
-        animation: { duration: 400 },
-        scales: { y: { beginAtZero: true } },
-        plugins: { legend: { display: false } }
-      }
-    });
-  }
-}
+// Wire sort controls if present
+document.getElementById("sortField")?.addEventListener("change", applyCurrentSort);
+document.getElementById("sortDir")?.addEventListener("change", applyCurrentSort);
