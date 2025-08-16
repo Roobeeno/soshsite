@@ -15,11 +15,16 @@
   </div>
 
   <div id="content" style="display:none">
-    <a style="float: right;" class="active" href="index.html">Back to Display</a>
+
+    <ul style="float: right;">
+      <a class="active" href="index.html">Back to Display</a>
+      <a class="active" href="inventory.html">Inventory</a>
+    </ul>
+   
     <h1>Sosh Comm Budgeting (Management)</h1>
     <h2>Current Balance: $<span id="totalAmount">0.00</span></h2>
 
-    <div class="form-inputs">
+    <!-- <div class="form-inputs">
       <select id="events"></select>
       <button onclick="addEvent()">＋</button>
       <input type="text" id="date" placeholder="MM/DD/YYYY" />
@@ -38,6 +43,42 @@
       <input type="text" id="description" placeholder="Description of Purchase" />
       <input type="button" value="Add Transaction" onclick="addRow();" />
     </div>
+
+    <!-- Manage toolbar (cards stay below this) -->
+<div class="manage-toolbar">
+  <!-- 1: Event -->
+  <select id="events" class="rect-input" title="Event"></select>
+
+  <!-- 2: Add Event (small square) -->
+  <button class="rect-square" aria-label="Add Event" onclick="addEvent()">＋</button>
+
+  <!-- 3: Date -->
+  <input id="date" class="rect-input" type="text" placeholder="MM/DD/YYYY" />
+
+  <!-- 4: Amount -->
+  <input id="transactionAmount" class="rect-input" type="number" step="0.01" placeholder="Amount ($)" />
+
+  <!-- 5: Category -->
+  <select id="categories" class="rect-input">
+    <option value="FoodAndBev">Food &amp; Beverage</option>
+    <option value="Alcohol">Alcohol</option>
+    <option value="Decor">Decor</option>
+    <option value="Services">Service</option>
+    <option value="Reimbursement">Reimbursement</option>
+    <option value="Dues">Social Dues</option>
+    <option value="Door">Door Fee</option>
+    <option value="Fine">Fine</option>
+    <option value="Other">Other</option>
+  </select>
+
+  <!-- 6: Description -->
+  <input id="description" class="rect-input" type="text" placeholder="Description of Purchase" />
+
+  <!-- 7: Add Transaction -->
+  <button class="rect-cta" onclick="addRow()">Add Transaction</button>
+</div>
+
+<div id="cards" class="cards"></div>
 
     <table id="main_table">
       <thead>

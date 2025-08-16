@@ -1,4 +1,4 @@
-.fira-sans-regular {font-family: "Fira Sans", sans-serif;font-weight: 400;font-style: normal;}body{font-family:'inter',sans-serif;background-color:#D8F2EF;padding:20px;text-align:center;}h2{font-size:20px;margin-bottom:10px;}.form-inputs{margin-bottom:20px;}.form-inputs input,.form-inputs select{margin:6px;padding:8px;font-size:14px;}#submission{background-color:#003F91;color:white;border:none;border-radius:4px;cursor:pointer;}table{margin:20px auto;width:90%;background-color:white;border-collapse:collapse;}#main_table th{border:none;background-color:#f2f2f2;padding:10px;}#main_table td{border:none;padding:10px;}tr:nth-child(even){background-color:#f2f2f2;}.table-container{padding:0;margin:0;border:none;overflow-x:auto;}.table-container table{margin:0;border-collapse:collapse;width:100%;}.chart-container{margin:40px auto;max-width:600px;}.table-container{max-height:250px;overflow-y:auto;margin:20px auto;width:90%;background-color:white;border:1px solid black;border-radius:8px;}.parent{display:flex;align-items:flex-start;text-align:center;justify-content:center;align-items:center;}.child{display:inline-block;vertical-align:middle;}.my-chart{width:100%!important;height:100%!important;}.hidden{display:none;}.form-inputs input,.form-inputs select{margin:6px;padding:8px;font-size:14px;border:1px solid #ccc;border-radius:0;background-color:white;font-family:'inter',sans-serif;height:34px;box-sizing:border-box;}.form-inputs select{appearance:none;-webkit-appearance:none;-moz-appearance:none;background-image:url('data:image/svg+xml;utf8,<svg fill="gray" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');background-repeat:no-repeat;background-position-x:calc(100% - 10px);background-position-y:center;background-size:16px 16px;padding-right:30px;}.topnav a{color:black;font-family:"Fira Sans",sans-serif;padding:1vw;}.topnav a:hover{color:yellow;}.fira-sans-regular {
+.fira-sans-regular {
     font-family: "Fira Sans", sans-serif;
     font-weight: 400;
     font-style: normal;
@@ -16,7 +16,7 @@
     margin-bottom: 10px;
   }
   
-  .form-inputs {
+  /* .form-inputs {
     margin-bottom: 20px;
   }
   
@@ -25,15 +25,15 @@
     margin: 6px;
     padding: 8px;
     font-size: 14px;
-  }
+  } */
   
-  #submission {
+  /* #submission {
     background-color: #003F91;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-  }
+  } */
   
   table {
     margin: 20px auto;
@@ -106,7 +106,7 @@
   .hidden {
     display: none;
   }
-  
+/*   
   .form-inputs input,
   .form-inputs select {
     margin: 6px;
@@ -130,7 +130,7 @@
     background-position-y: center;
     background-size: 16px 16px;
     padding-right: 30px;
-  }
+  } */
   
   .topnav a {
     color: black;
@@ -141,3 +141,228 @@
   .topnav a:hover {
     color: yellow;
   }
+
+  
+
+
+/* cards */
+/* base card transition */
+.txn-card {
+  transition: transform .28s ease, opacity .28s ease;
+  will-change: transform, opacity;
+}
+
+/* slide-in on add */
+.txn-card.enter {
+  transform: translateX(28px);
+  opacity: 0;
+}
+.txn-card.enter-active {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* slide-out + collapse on remove */
+.txn-card.exiting {
+  overflow: hidden;
+  transform: translateX(-28px);
+  opacity: 0;
+
+  /* collapse height/padding/margin so others slide up smoothly */
+  max-height: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+
+  transition:
+    transform .24s ease,
+    opacity .24s ease,
+    max-height .24s ease,
+    padding .24s ease,
+    margin .24s ease;
+}
+
+/* for the form input */
+/* === Toolbar layout (no absolute positioning) === */
+.manage-toolbar {
+  display: grid;
+  grid-template-columns: 170px 60px 170px 170px 170px 1fr 218px;
+  gap: 16px;
+  align-items: center;
+  max-width: 1230px;           /* matches Figma total width */
+  margin: 16px auto 24px;      /* center + breathing room */
+}
+
+/* Base rectangle look from Figma */
+.rect-input,
+.rect-square,
+.rect-cta {
+  height: 60px;
+  background: rgba(183, 195, 235, 0.8);
+  border: 3px solid #1E1E1E;
+  border-radius: 20px;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-size: 18px;
+  color: #0d0d0d;
+}
+
+/* Inputs/selects specific */
+.rect-input {
+  padding: 0 14px;
+  width: 100%;
+  outline: none;
+  border-radius: 20px;
+  background-clip: padding-box;
+}
+
+/* Small square add-event button */
+.rect-square {
+  width: 60px;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* CTA button (Add Transaction) */
+.rect-cta {
+  width: 100%;
+  font-weight: 800;
+  letter-spacing: .2px;
+  color: #0d2b52;
+  cursor: pointer;
+  transition: transform .08s ease, filter .08s ease;
+}
+.rect-cta:hover,
+.rect-square:hover { filter: brightness(0.98); }
+.rect-cta:active,
+.rect-square:active { transform: translateY(1px); }
+
+/* Placeholder color */
+.rect-input::placeholder { color: rgba(0,0,0,0.55); }
+
+/* Make it wrap nicely on smaller screens */
+@media (max-width: 1240px) {
+  .manage-toolbar {
+    grid-template-columns: 1fr 60px 1fr 1fr 1fr 2fr 1fr;
+    max-width: 100%;
+    padding: 0 16px;
+  }
+}
+@media (max-width: 800px) {
+  .manage-toolbar {
+    grid-template-columns: 1fr 60px 1fr;
+  }
+  /* stack remaining on next rows */
+  .manage-toolbar > :nth-child(4),
+  .manage-toolbar > :nth-child(5),
+  .manage-toolbar > :nth-child(6),
+  .manage-toolbar > :nth-child(7) {
+    grid-column: 1 / -1;
+  }
+}
+
+/* === Figma variables === */
+:root {
+  --card-bg: rgba(183,195,235,0.80);
+  --stroke: #1E1E1E;
+  --pill-blue: #034078;
+  --pos: #27932E;
+  --neg: #E85B5B;
+  --radius: 20px;
+}
+
+/* Ensure our styles win over older table styles */
+.manage-toolbar, .cards, .txn-card, .rect-input, .rect-square, .rect-cta { font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+
+/* ===== Toolbar (the seven rectangles) ===== */
+.manage-toolbar{
+  display:grid;
+  grid-template-columns: 170px 60px 170px 170px 170px 1fr 218px;
+  gap:16px;
+  align-items:center;
+  max-width:1230px;
+  margin:16px auto 28px;
+}
+.rect-input,.rect-square,.rect-cta{
+  height:60px;
+  background:var(--card-bg);
+  border:3px solid var(--stroke);
+  border-radius:var(--radius);
+  box-shadow:0 6px 14px rgba(0,0,0,.12);
+  font-size:18px;
+  color:#0d0d0d;
+}
+.rect-input{ padding:0 14px; width:100%; }
+.rect-input::placeholder{ color:rgba(0,0,0,.55); }
+.rect-square{ width:60px; display:grid; place-items:center; font-weight:800; font-size:28px; cursor:pointer; }
+.rect-cta{ width:100%; font-weight:800; letter-spacing:.2px; color:#0d2b52; cursor:pointer; transition:transform .08s ease, filter .08s ease; }
+.rect-cta:hover,.rect-square:hover{ filter:brightness(.98); }
+.rect-cta:active,.rect-square:active{ transform:translateY(1px); }
+
+/* ===== Cards list ===== */
+.cards{ display:flex; flex-direction:column; gap:16px; max-width:1230px; margin:0 auto; }
+
+/* One transaction card (match 100px height, 5px stroke, 20px radius) */
+.txn-card{
+  display:grid;
+  grid-template-columns: 320px 1fr 220px;  /* left | middle | right */
+  align-items:center;
+  min-height:100px;
+  padding:14px 18px;
+  background:var(--card-bg);
+  border:5px solid var(--stroke);
+  border-radius:var(--radius);
+  box-shadow:0 10px 24px rgba(0,0,0,.18);
+  backdrop-filter:blur(2px);
+}
+
+/* Left: Event + Date (bold 30px) */
+.txn-left{ display:flex; flex-direction:column; gap:2px; color:#000; }
+.txn-left .event, .txn-left .date{ font-weight:700; font-size:30px; line-height:37px; }
+
+/* Mid: Amount + description */
+.txn-mid{ display:flex; align-items:center; gap:12px; }
+.txn-mid .amount{ font-weight:700; font-size:40px; line-height:49px; }
+.txn-mid .amount.positive{ color:var(--pos); }
+.txn-mid .amount.negative{ color:var(--neg); }
+.txn-mid .desc{ font-weight:300; font-size:20px; line-height:24px; color:#000; text-align:center; }
+
+/* Right: Category pill */
+.txn-right{ display:flex; justify-content:flex-end; }
+.txn-right .category{
+  font-weight:700; font-size:24px; line-height:29px; color:var(--pill-blue);
+  background:rgba(255,255,255,.92);
+  border:1px solid rgba(0,0,0,.10);
+  padding:8px 14px; border-radius:14px;
+}
+
+/* ===== Card animations (enter/remove) ===== */
+.txn-card{ transition: transform .28s ease, opacity .28s ease; will-change: transform, opacity; }
+.txn-card.enter{ transform:translateX(28px); opacity:0; }
+.txn-card.enter-active{ transform:translateX(0); opacity:1; }
+.txn-card.exiting{
+  overflow:hidden; transform:translateX(-28px); opacity:0;
+  max-height:0 !important; padding-top:0 !important; padding-bottom:0 !important;
+  margin-top:0 !important; margin-bottom:0 !important;
+  transition: transform .24s ease, opacity .24s ease, max-height .24s ease, padding .24s ease, margin .24s ease;
+}
+
+/* ===== Hide the legacy table visually (keep for charts/sort) ===== */
+#main_table{ display:none; }
+
+/* ===== Responsive tweaks ===== */
+@media (max-width:1240px){
+  .manage-toolbar{ grid-template-columns: 1fr 60px 1fr 1fr 1fr 2fr 1fr; max-width:100%; padding:0 16px; }
+  .cards{ max-width:100%; padding:0 16px; }
+}
+@media (max-width:900px){
+  .txn-card{ grid-template-columns: 1fr; gap:10px; }
+  .txn-right{ justify-content:flex-start; }
+  .txn-mid .desc{ text-align:left; }
+}
