@@ -4,9 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sosh Comm Budgeting - Manage</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="tablestyle.css" />
 </head>
 <body class="manage">
+
   <div id="loginSection">
     <input type="email" id="email" placeholder="Enter Email" />
     <input type="password" id="password" placeholder="Enter Password" />
@@ -16,12 +18,13 @@
   <div id="content" style="display:none">
 
     <ul style="float: right;">
-      <a class="active" style="margin: 10px;" href="index.html">Back to Display</a>
-      <a class="active" style="margin: 10px;" href="inventory.html">Inventory</a>
+      <a class="active" style="margin: 10px; font-family: Montserrat;" href="index.html">Back to Display</a>
+      <a class="active" style="margin: 10px; font-family: Montserrat;" href="inventory.html">Inventory</a>
     </ul>
-   
-    <h1>Sosh Comm Budgeting (Management)</h1>
-    <h2>Current Balance: $<span id="totalAmount">0.00</span></h2>
+  
+    <h1 class="page-title" style="margin-right:37%;">THe Soshcomm Budget Tracker Admin</h1>
+
+    <h2 style="margin:6px 0 0; margin-right: 63%;">Current Balance: $<span id="totalAmount">0.00</span></h2>
 
     <!-- Manage toolbar (cards stay below this) -->
   <div class="manage-toolbar">

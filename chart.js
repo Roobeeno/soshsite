@@ -63,26 +63,12 @@ function renderChart() {
 
   chartInstance = new Chart(ctx, {
     type: "bar",
-    data: {
-      labels,
-      datasets: [{
-        label: "Amount ($)",
-        data,
-        backgroundColor: "#457b9d",  // opaque
-        borderColor: "#1E1E1E",
-        borderWidth: 1
-      }],
-    },
+    data: { labels, datasets: [{ label: "Amount ($)", data }] },
     options: {
       responsive: true,
       animation: { duration: 400 },
-      scales: {
-        y: { beginAtZero: true, grid: { color: "rgba(0,0,0,0.08)" } },
-        x: { grid: { display: false } }
-      },
-      plugins: {
-        legend: { display: false }
-      }
+      scales: { y: { beginAtZero: true } },
+      plugins: { legend: { display: false } },
     }
   });
 }

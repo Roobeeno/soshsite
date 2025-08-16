@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
 /* ===== Base ===== */
 :root{
   --card-bg: rgba(183,195,235,0.80);
@@ -6,23 +7,27 @@
   --pos: #27932E;
   --neg: #E85B5B;
   --radius: 20px;
-  --toolbar-max: 1360px;  /* wider row so pills don’t feel cramped */
+  --toolbar-max: 1200px;  /* wider row so pills don’t feel cramped */
   /* Layout constants; override via body classes per page */
   --header-h: 120px;   /* title + balance + spacing */
   --toolbar-h: 0px;    /* set to 104px on manage page */
   --footer-h: 0px;
 }
 
-.fira-sans-regular{ font-family:"Fira Sans",sans-serif; font-weight:400; font-style:normal; }
+.fira-sans-regular {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
 
 /* Lock the page; only cards will scroll */
 html, body{
   height: 100%;
   overflow: hidden;
+  font-family: "Montserrat", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
 
 body{
-  font-family:'inter',sans-serif;
   margin: 0;
   min-height: 100vh;
   /* center + fill, may crop edges to avoid distortion */
@@ -38,13 +43,26 @@ body{
   body{ background-attachment: scroll; }
 }
 
+h1{ font-size: 40px;}
 h2{ font-size:20px; margin-bottom:10px; }
+
+.page-title {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 2rem;
+  text-align: center;
+  margin-right: 45%;
+  margin-top: 100px; /* adjust to taste */
+}
 
 .parent{ display:flex; justify-content:center; align-items:center; text-align:center; }
 .child{ display:inline-block; vertical-align:middle; }
 
 .my-chart{ width:100%!important; height:100%!important;}
-#budgetChart { background: #fff; opacity: 75%; padding: 20px;}
+#budgetChart {
+  background: rgba(255,255,255,0.75); /* subtle translucency without fading the data */
+  padding: 20px;
+}
 
 .hidden{ display:none; }
 
@@ -55,11 +73,11 @@ h2{ font-size:20px; margin-bottom:10px; }
   grid-template-columns:
     minmax(165px, 1fr)     /* Event */
     60px                   /* + */
-    minmax(195px, 1.2fr)   /* Date */
-    minmax(185px, 1.1fr)   /* Amount */
-    minmax(185px, 1.1fr)   /* Category */
-    minmax(255px, 2.2fr)   /* Description */
-    minmax(170px, 1.1fr);  /* Add Transaction */
+    minmax(160px, 1.2fr)   /* Date */
+    minmax(160px, 1.1fr)   /* Amount */
+    minmax(155px, 1.1fr)   /* Category */
+    minmax(180px, 2.2fr)   /* Description */
+    minmax(140px, 1.1fr);  /* Add Transaction */
   column-gap: 24px;
   row-gap: 14px;
   align-items:center;
@@ -69,9 +87,9 @@ h2{ font-size:20px; margin-bottom:10px; }
 }
 
 .rect-input,.rect-square,.rect-cta{
-  height:60px;
+  height:50px;
   background:var(--card-bg);
-  border:3px solid var(--stroke);
+  border:2px solid var(--stroke);
   border-radius:var(--radius);
   font-family:'Montserrat',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
   font-size:18px;
@@ -146,10 +164,10 @@ h2{ font-size:20px; margin-bottom:10px; }
   display:grid;
   grid-template-columns: 320px 1fr 220px;  /* left | middle | right */
   align-items:center;
-  min-height:100px;
+  min-height:80px;
   padding:14px 18px;
   background:var(--card-bg);
-  border:5px solid var(--stroke);
+  border:2px solid var(--stroke);
   border-radius:var(--radius);
   backdrop-filter:blur(2px);
 
@@ -159,8 +177,8 @@ h2{ font-size:20px; margin-bottom:10px; }
 }
 
 /* Card content */
-.txn-left{ display:flex; flex-direction:column; gap:2px; color:#000; }
-.txn-left .event, .txn-left .date{ font-weight:700; font-size:30px; line-height:37px; }
+.txn-left{ display:flex; flex-direction:column; gap:px; color:#000; }
+.txn-left .event, .txn-left .date{ font-weight:400; font-size:25px; line-height:37px; }
 
 .txn-mid{ display:flex; align-items:center; gap:12px; }
 .txn-mid .amount{ font-weight:700; font-size:40px; line-height:49px; }
@@ -212,24 +230,6 @@ h2{ font-size:20px; margin-bottom:10px; }
   padding-top: 0 !important;
   padding-bottom: 0 !important;
 }
-
-/* ===== (Optional legacy) table styles kept for compatibility ===== */
-.table-container{
-  padding:0;
-  margin:20px auto;
-  border:none;
-  overflow-x:auto;
-  max-height:250px;
-  width:90%;
-  background-color:white;
-  border:1px solid black;
-  border-radius:8px;
-}
-.table-container table{ margin:0; border-collapse:collapse; width:100%; }
-table{ margin:20px auto; width:90%; background-color:white; border-collapse:collapse; }
-#main_table th{ border:none; background-color:#f2f2f2; padding:10px; }
-#main_table td{ border:none; padding:10px; }
-tr:nth-child(even){ background-color:#f2f2f2; }
 
 /* ===== Page-specific overrides via body classes ===== */
 body.manage{

@@ -6,7 +6,7 @@
   <title>Sosh Comm Budgeting — Read-only</title>
 
   <!-- Font to match manage page -->
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Your styles (must include .cards, .txn-card, etc.) -->
   <link rel="stylesheet" href="tablestyle.css" />
@@ -19,16 +19,14 @@
         <a class="active" style="margin: 10px; font-family: Montserrat" href="chart.html">Chart</a>
     </ul>
     
-  <header style="text-align:center; margin: 20px 0;">
-    <h1 style="margin:0;">Sosh Comm Budgeting (Read-only)</h1>
-    <h2 style="margin:6px 0 0;">
-      Current Balance: $<span id="totalAmount">0.00</span>
-    </h2>
-  </header>
+
+  <h1 class="page-title">THe Soshcomm Budget Tracker</h1>
+
+  <h2 style="margin:6px 0 0; margin-right: 63%;">Current Balance: $<span id="totalAmount">0.00</span></h2>
   
 
   <!-- Sort bar for cards -->
-<div class="sortbar" style="text-align:center; margin: 4px 0 16px;">
+<div class="sortbar" style="text-align:center; margin-left: 60%; margin-bottom: 10px;">
   <label style="margin-right:8px;">Sort by</label>
   <select id="sortField">
     <option value="date">Date</option>
