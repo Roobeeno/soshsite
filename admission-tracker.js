@@ -7,8 +7,12 @@ import {
     setDoc
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
-// NEW: Import the membersList from the separate bandsmen-list.js file
+// Import the membersList from the separate bandsmen-list.js file
 import { membersList } from "./bandsmen-list.js";
+
+// Import the one-time social membership fees
+import { socialMemberFees } from "./social-member-fees.js";
+
 
 // --- DOM elements ---
 const pastGatheringsView = document.getElementById('past-gatherings-view');
@@ -37,8 +41,9 @@ const fees = {
         non_sober: 10
     },
     social_member: {
-        sober: 5,
-        non_sober: 10
+        // Social members pay a one-time fee, so subsequent gathering fees are 0
+        sober: 0,
+        non_sober: 0
     },
     social_guest: {
         sober: 10,
@@ -90,34 +95,8 @@ function renderInitialButtons() {
 }
 
 function handleNewSocialMember() {
-    const newName = prompt("Enter the name of the new social member:");
-    if (newName) {
-        // Find existing member, or create a new entry
-        const existingMember = membersList.find(m => m.name.toLowerCase() === newName.toLowerCase());
-        
-        currentEntry = {
-            type: 'social_member',
-            name: newName,
-            section: existingMember ? existingMember.section : 'N/A',
-            band_year: existingMember ? existingMember.band_year : 'N/A'
-        };
-
-        // NOTE: This change is not permanent and will be lost on page refresh.
-        // A more permanent solution would involve saving the change to a database like Firestore.
-        if (existingMember) {
-            existingMember.isSocialMember = true;
-        } else {
-            membersList.push({
-                name: newName,
-                section: 'N/A',
-                band_year: 'N/A',
-                isSocialMember: true,
-                isSober: true
-            });
-        }
-        
-        renderSoberButtons();
-    }
+    // Renders the fee options immediately, before prompting for a name
+    renderNewSocialMemberFeeButtons();
 }
 
 function handleSocialGuest() {
@@ -159,10 +138,40 @@ function renderNameDropdown(memberType) {
                 name: selectedMember.name,
                 section: selectedMember.section,
                 band_year: selectedMember.band_year,
-                isSober: selectedMember.isSober // Grab existing sober status
+                isSober: selectedMember.isSober
             };
             renderSoberButtons();
         }
+    });
+}
+
+// Renders buttons for the one-time social member fee dynamically from the imported file
+function renderNewSocialMemberFeeButtons() {
+    let buttonsHTML = `<p>Select One-Time Social Member Fee:</p>`;
+    
+    for (const [feeName, amount] of Object.entries(socialMemberFees)) {
+        buttonsHTML += `<button class="tracker-button" data-fee-name="${feeName}">$${amount} (${feeName})</button>`;
+    }
+    buttonsHTML += `<button id="back-btn" class="tracker-button">Back</button>`;
+    
+    buttonTreeContainer.innerHTML = buttonsHTML;
+
+    document.getElementById('back-btn').addEventListener('click', renderInitialButtons);
+
+    buttonTreeContainer.querySelectorAll('button[data-fee-name]').forEach(button => {
+        button.addEventListener('click', (event) => {
+            const newName = prompt("Enter the name of the new social member:");
+            if (newName) {
+                const feeName = event.target.dataset.fee_name;
+                currentEntry.type = 'new_social';
+                currentEntry.subType = feeName;
+                currentEntry.amount = socialMemberFees[feeName];
+                currentEntry.name = newName;
+
+                // After selecting the fee and getting the name, go to payment buttons
+                renderPaymentButtons();
+            }
+        });
     });
 }
 
@@ -194,7 +203,13 @@ function renderPaymentButtons() {
         <button id="back-btn" class="tracker-button">Back</button>
     `;
 
-    document.getElementById('back-btn').addEventListener('click', renderSoberButtons);
+    document.getElementById('back-btn').addEventListener('click', () => {
+        if (currentEntry.type === 'new_social') {
+            renderNewSocialMemberFeeButtons();
+        } else {
+            renderSoberButtons();
+        }
+    });
     
     buttonTreeContainer.querySelectorAll('button[data-payment]').forEach(button => {
         button.addEventListener('click', (event) => {
@@ -205,10 +220,27 @@ function renderPaymentButtons() {
 }
 
 function handleFinalEntry() {
-    const feeType = currentEntry.isSober ? 'sober' : 'non-sober';
-    currentEntry.amount = calculateFee(currentEntry.type, feeType);
-    currentEntry.subType = feeType;
+    if (currentEntry.type !== 'new_social') {
+        const feeType = currentEntry.isSober ? 'sober' : 'non_sober';
+        currentEntry.amount = calculateFee(currentEntry.type, feeType);
+        currentEntry.subType = feeType;
+    }
 
+    const memberIndex = membersList.findIndex(m => m.name.toLowerCase() === currentEntry.name.toLowerCase());
+    if (currentEntry.type === 'new_social') {
+        if (memberIndex !== -1) {
+            membersList[memberIndex].isSocialMember = true;
+        } else {
+            membersList.push({
+                name: currentEntry.name,
+                section: 'N/A', // New members don't have a section until added to the list manually
+                band_year: 'N/A',
+                isSocialMember: true,
+                isSober: true // Assumed sober status for base member data
+            });
+        }
+    }
+    
     attendeeEntries.push(currentEntry);
 
     const row = document.createElement('tr');
@@ -274,4 +306,4 @@ function updateSummary() {
 
 // --- Initial setup ---
 showView('past-gatherings-view');
-loadPastGatherings();
+// loadPastGatherings(); // This will not work locally without a firebase setup
