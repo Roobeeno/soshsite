@@ -4,7 +4,9 @@ import {
     doc,
     addDoc,
     onSnapshot,
-    setDoc
+    setDoc,
+    getDocs,
+    getDoc
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 // Import the membersList from the separate bandsmen-list.js file
@@ -41,13 +43,12 @@ const fees = {
         non_sober: 10
     },
     social_member: {
-        // Social members pay a one-time fee, so subsequent gathering fees are 0
         sober: 0,
         non_sober: 0
     },
     social_guest: {
-        sober: 10,
-        non_sober: 15
+        sober: 2.5,
+        non_sober: 5
     }
 };
 
@@ -77,6 +78,7 @@ function resetAttendanceInput() {
     renderInitialButtons();
     currentAttendanceTbody.innerHTML = '';
     updateSummary();
+    publishBtn.style.display = 'block';
 }
 
 function renderInitialButtons() {
@@ -90,31 +92,19 @@ function renderInitialButtons() {
 
     document.getElementById('regular-attendee-btn').addEventListener('click', () => renderNameDropdown('regular'));
     document.getElementById('social-member-btn').addEventListener('click', () => renderNameDropdown('social_member'));
-    document.getElementById('new-social-member-btn').addEventListener('click', () => handleNewSocialMember());
+    document.getElementById('new-social-member-btn').addEventListener('click', () => renderNameDropdown('potential_social'));
     document.getElementById('social-guest-btn').addEventListener('click', () => handleSocialGuest());
 }
 
-function handleNewSocialMember() {
-    // Renders the fee options immediately, before prompting for a name
-    renderNewSocialMemberFeeButtons();
-}
-
-function handleSocialGuest() {
-    currentEntry = {
-        type: 'social_guest',
-        name: 'Social Guest',
-        section: 'N/A',
-        band_year: 'N/A'
-    };
-    renderSoberButtons();
-}
-
+// Renders a name dropdown based on member type
 function renderNameDropdown(memberType) {
     const listToRender = membersList.filter(member => {
         if (memberType === 'regular') {
             return !member.isSocialMember;
         } else if (memberType === 'social_member') {
             return member.isSocialMember;
+        } else if (memberType === 'potential_social') {
+            return !member.isSocialMember;
         }
     });
 
@@ -140,14 +130,19 @@ function renderNameDropdown(memberType) {
                 band_year: selectedMember.band_year,
                 isSober: selectedMember.isSober
             };
-            renderSoberButtons();
+            
+            if (memberType === 'potential_social') {
+                renderNewSocialMemberFeeButtons();
+            } else {
+                renderSoberButtons();
+            }
         }
     });
 }
 
-// Renders buttons for the one-time social member fee dynamically from the imported file
+// Renders buttons for the one-time social member fee dynamically
 function renderNewSocialMemberFeeButtons() {
-    let buttonsHTML = `<p>Select One-Time Social Member Fee:</p>`;
+    let buttonsHTML = `<p>Select One-Time Social Member Fee for ${currentEntry.name}:</p>`;
     
     for (const [feeName, amount] of Object.entries(socialMemberFees)) {
         buttonsHTML += `<button class="tracker-button" data-fee-name="${feeName}">$${amount} (${feeName})</button>`;
@@ -156,21 +151,16 @@ function renderNewSocialMemberFeeButtons() {
     
     buttonTreeContainer.innerHTML = buttonsHTML;
 
-    document.getElementById('back-btn').addEventListener('click', renderInitialButtons);
+    document.getElementById('back-btn').addEventListener('click', () => renderNameDropdown('potential_social'));
 
     buttonTreeContainer.querySelectorAll('button[data-fee-name]').forEach(button => {
         button.addEventListener('click', (event) => {
-            const newName = prompt("Enter the name of the new social member:");
-            if (newName) {
-                const feeName = event.target.dataset.fee_name;
-                currentEntry.type = 'new_social';
-                currentEntry.subType = feeName;
-                currentEntry.amount = socialMemberFees[feeName];
-                currentEntry.name = newName;
-
-                // After selecting the fee and getting the name, go to payment buttons
-                renderPaymentButtons();
-            }
+            const feeName = event.target.dataset.fee_name;
+            currentEntry.type = 'new_social';
+            currentEntry.subType = feeName;
+            currentEntry.amount = socialMemberFees[feeName];
+            
+            renderPaymentButtons();
         });
     });
 }
@@ -204,8 +194,8 @@ function renderPaymentButtons() {
     `;
 
     document.getElementById('back-btn').addEventListener('click', () => {
-        if (currentEntry.type === 'new_social') {
-            renderNewSocialMemberFeeButtons();
+        if (currentEntry.type === 'potential_social') {
+             renderNewSocialMemberFeeButtons();
         } else {
             renderSoberButtons();
         }
@@ -227,16 +217,17 @@ function handleFinalEntry() {
     }
 
     const memberIndex = membersList.findIndex(m => m.name.toLowerCase() === currentEntry.name.toLowerCase());
+    
     if (currentEntry.type === 'new_social') {
         if (memberIndex !== -1) {
             membersList[memberIndex].isSocialMember = true;
         } else {
             membersList.push({
                 name: currentEntry.name,
-                section: 'N/A', // New members don't have a section until added to the list manually
+                section: 'N/A', 
                 band_year: 'N/A',
                 isSocialMember: true,
-                isSober: true // Assumed sober status for base member data
+                isSober: true
             });
         }
     }
@@ -244,12 +235,21 @@ function handleFinalEntry() {
     attendeeEntries.push(currentEntry);
 
     const row = document.createElement('tr');
+    let typeDisplay = currentEntry.type;
+    
+    // NEW: Clean up the display text for "New Social Member"
+    if (currentEntry.type === 'regular' || currentEntry.type === 'social_guest') {
+        typeDisplay = `${currentEntry.type} (${currentEntry.subType})`;
+    } else if (currentEntry.type === 'social_member' || currentEntry.type === 'new_social') {
+        typeDisplay = `Social Member`;
+    }
+
     row.innerHTML = `
-        <td>${currentEntry.type} (${currentEntry.subType})</td>
+        <td>${typeDisplay}</td>
         <td>${currentEntry.name}</td>
-        <td>${currentEntry.section}</td>
+        <td>${currentEntry.section || 'N/A'}</td>
         <td>${(currentEntry.isSober) ? '✅ Yes' : '❌ No'}</td>
-        <td>${currentEntry.payment === 'cash' ? '✅ Yes' : '❌ No'}</td>
+        <td>${currentEntry.payment}</td>
     `;
     currentAttendanceTbody.appendChild(row);
 
@@ -269,7 +269,11 @@ async function publishGathering() {
         return;
     }
 
-    const totalIncome = attendeeEntries.reduce((sum, entry) => sum + entry.amount, 0);
+    // NEW: Use parseFloat to ensure numbers are being summed
+    const totalIncome = attendeeEntries.reduce((sum, entry) => {
+        const amount = parseFloat(entry.amount);
+        return sum + (isNaN(amount) ? 0 : amount);
+    }, 0);
 
     const gatheringData = {
         name: currentGatheringName,
@@ -297,13 +301,86 @@ async function publishGathering() {
 }
 
 function updateSummary() {
-    const totalIncome = attendeeEntries.reduce((sum, entry) => sum + entry.amount, 0);
+    // NEW: Use parseFloat to ensure numbers are being summed
+    const totalIncome = attendeeEntries.reduce((sum, entry) => {
+        const amount = parseFloat(entry.amount);
+        return sum + (isNaN(amount) ? 0 : amount);
+    }, 0);
     attendeeCountDisplay.textContent = attendeeEntries.length;
     totalIncomeDisplay.textContent = totalIncome.toFixed(2);
 }
 
-// ... (loadPastGatherings and other functions are assumed to be in the original code) ...
+// Function to load and display all past gatherings
+async function loadPastGatherings() {
+    pastGatheringsTableBody.innerHTML = '';
+    const querySnapshot = await getDocs(gatheringsRef);
+    querySnapshot.forEach(doc => {
+        const data = doc.data();
+        const row = document.createElement('tr');
+        row.dataset.id = doc.id;
+        row.classList.add('past-gathering-row');
+        row.innerHTML = `
+            <td>${data.name}</td>
+            <td>${new Date(data.date).toLocaleDateString()}</td>
+            <td>${data.attendees.length}</td>
+            <td>$${data.totalIncome.toFixed(2)}</td>
+        `;
+        pastGatheringsTableBody.appendChild(row);
+    });
+
+    document.querySelectorAll('.past-gathering-row').forEach(row => {
+        row.addEventListener('click', () => {
+            const gatheringId = row.dataset.id;
+            displayPastGathering(gatheringId);
+        });
+    });
+}
+
+// Function to display the details of a past gathering
+async function displayPastGathering(gatheringId) {
+    const gatheringDoc = await getDoc(doc(gatheringsRef, gatheringId));
+    if (gatheringDoc.exists()) {
+        const data = gatheringDoc.data();
+        currentGatheringTitle.textContent = `${data.name} (Archived)`;
+        currentAttendanceTbody.innerHTML = '';
+        
+        data.attendees.forEach(entry => {
+            const row = document.createElement('tr');
+            
+            let typeDisplay = entry.type;
+            if (entry.type === 'regular' || entry.type === 'social_guest') {
+                typeDisplay = `${entry.type} (${entry.subType})`;
+            } else if (entry.type === 'social_member' || entry.type === 'new_social') {
+                typeDisplay = `Social Member`;
+            }
+
+            row.innerHTML = `
+                <td>${typeDisplay}</td>
+                <td>${entry.name}</td>
+                <td>${entry.section || 'N/A'}</td>
+                <td>${entry.isSober ? '✅ Yes' : '❌ No'}</td>
+                <td>${entry.payment}</td>
+            `;
+            currentAttendanceTbody.appendChild(row);
+        });
+
+        updateSummaryDisplay(data.attendees.length, data.totalIncome);
+        publishBtn.style.display = 'none';
+        buttonTreeContainer.innerHTML = `<button id="back-to-gatherings-btn" class="tracker-button">Back to Gatherings</button>`;
+        document.getElementById('back-to-gatherings-btn').addEventListener('click', () => {
+            showView('past-gatherings-view');
+            loadPastGatherings();
+        });
+        showView('attendance-input-view');
+    }
+}
+
+// A helper function to update summary fields for past gatherings
+function updateSummaryDisplay(count, income) {
+    attendeeCountDisplay.textContent = count;
+    totalIncomeDisplay.textContent = income.toFixed(2);
+}
 
 // --- Initial setup ---
 showView('past-gatherings-view');
-// loadPastGatherings(); // This will not work locally without a firebase setup
+loadPastGatherings();
