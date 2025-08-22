@@ -6,15 +6,16 @@ import {
     onSnapshot,
     setDoc,
     getDocs,
-    getDoc
+    getDoc,
+    query // Import query for fetching collections
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
-// Import the membersList from the separate bandsmen-list.js file
+// Import the membersList from the separate bandsmen-list.js file (KEEPING THIS LOCAL FOR NOW)
 import { membersList } from "./bandsmen-list.js";
 
-// Import the one-time social membership fees
-import { socialMemberFees } from "./social-member-fees.js";
-
+// --- Global variables ---
+// socialMemberFees will now be populated from Firestore
+let socialMemberFees = {};
 
 // --- DOM elements ---
 const pastGatheringsView = document.getElementById('past-gatherings-view');
@@ -64,7 +65,7 @@ function escapeHtmlAttribute(str) {
 
 function renderButtonBlock(htmlContent, backCallback) {
     buttonTreeContainer.innerHTML = htmlContent;
-    const backBtn = document.getElementById('back-btn');
+    const backBtn = document.getElementById('back-btn'); // This ID is crucial for listener
     if (backBtn) {
         backBtn.addEventListener('click', backCallback);
     }
@@ -95,6 +96,31 @@ function calculateFee(memberType, feeType) {
     return fees[memberType][feeType];
 }
 
+// --- Firestore Data Fetching Functions ---
+/**
+ * Fetches one-time social member fees from Firestore.
+ * Expects a collection named 'social_fees' with a document ID 'fees_2526'.
+ */
+async function fetchSocialFees() {
+    // Reference the specific document for fees (e.g., 'fees_2526')
+    const feesDocRef = doc(db, "social_fees", "fees_2526");
+    const feesDocSnap = await getDoc(feesDocRef);
+
+    if (feesDocSnap.exists()) {
+        socialMemberFees = feesDocSnap.data();
+        console.log("Social fees fetched:", socialMemberFees);
+    } else {
+        console.warn("Social fees document 'fees_2526' not found in Firestore. Using fallback.");
+        // Provide a fallback if the document is not found
+        socialMemberFees = {
+            'BaseFee': 90,
+            '3rd4thYear': 85,
+            'Transfer': 80,
+            'Sober': 70
+        };
+    }
+}
+
 
 // --- View and Button Handlers ---
 function showView(viewId) {
@@ -111,6 +137,7 @@ newGatheringBtn.addEventListener('click', () => {
         currentGatheringTitle.textContent = currentGatheringName;
         resetAttendanceInput();
         showView('attendance-input-view');
+        // No need to fetch bandsmen list here if it's local for now
     }
 });
 
@@ -179,7 +206,7 @@ function renderNameDropdown(memberType) {
             ${options}
         </select>
         <button id="next-btn" class="tracker-button">Next</button>
-        <button id="back-to-main-btn" class="tracker-button">Back</button>
+        <button id="back-btn" class="tracker-button">Back</button>
     `, renderInitialButtons);
     
     document.getElementById('next-btn').addEventListener('click', () => {
@@ -241,13 +268,12 @@ function renderSoberButtons(isNewSocialMember) {
 function renderSocialFees() {
     let buttonsHTML = `<p>Select One-Time Social Member Fee for ${currentEntry.name}:</p>`;
     
-    // FIX: Get the original fee name and amount from the imported object
+    // Iterate through socialMemberFees (now fetched from Firestore)
     const relevantFees = Object.entries(socialMemberFees);
 
     relevantFees.forEach(([feeName, amount]) => {
-        // FIX: Create a clean data-attribute name by replacing spaces with underscores
-        const dataAttributeName = feeName.replace(/\s/g, '_');
-        buttonsHTML += `<button class="tracker-button" data-fee-name="${dataAttributeName}">$${amount} (${feeName})</button>`;
+        // Use the feeName directly as the data-fee-name since keys are assumed clean
+        buttonsHTML += `<button class="tracker-button" data-fee-name="${feeName}">$${amount} (${feeName})</button>`;
     });
 
     buttonsHTML += `<button id="back-btn" class="tracker-button">Back</button>`;
@@ -256,11 +282,7 @@ function renderSocialFees() {
 
     document.querySelectorAll('button[data-fee-name]').forEach(button => {
         button.addEventListener('click', (event) => {
-            // FIX: Map the clean data-attribute name back to the original fee name
-            const dataAttributeName = event.target.dataset.feeName;
-            const originalFeeName = dataAttributeName.replace(/_/g, ' ');
-            
-            currentEntry.subType = originalFeeName;
+            currentEntry.subType = event.target.dataset.feeName; // Directly use data-fee-name
             currentEntry.type = 'new_social'; 
             renderPaymentButtons();
         });
@@ -290,6 +312,7 @@ function renderPaymentButtons() {
 
 function handleFinalEntry() {
     if (currentEntry.type === 'new_social') {
+        // Amount is now directly from the fetched socialMemberFees
         currentEntry.amount = socialMemberFees[currentEntry.subType];
     } else {
         const feeType = currentEntry.isSober ? 'sober' : 'non_sober';
@@ -297,13 +320,21 @@ function handleFinalEntry() {
         currentEntry.subType = feeType;
     }
 
+    // Since bandsmen list is local for now, existingMember logic remains as is
     const memberIndex = membersList.findIndex(m => m.name.toLowerCase() === currentEntry.name.toLowerCase());
     const existingMember = memberIndex !== -1 ? membersList[memberIndex] : null;
 
     if (currentEntry.type === 'new_social') {
-        existingMember.isSocialMember = true;
-        currentEntry.section = existingMember.section;
-        currentEntry.band_year = existingMember.band_year;
+        if (existingMember) {
+            existingMember.isSocialMember = true; // Update local list for current session
+            currentEntry.section = existingMember.section;
+            currentEntry.band_year = existingMember.band_year;
+            // No Firestore update for bandsmen yet in this step
+        } else {
+            // This case should not happen if 'potential_social' filters correctly
+            // and assumes bandsmen are pre-existing.
+            console.error(`Attempted to process new social member for non-existent bandsman: ${currentEntry.name}`);
+        }
     } else {
         if (existingMember) {
             currentEntry.section = existingMember.section;
@@ -342,7 +373,7 @@ async function publishGathering() {
         attendees: attendeeEntries,
         totalIncome: totalIncome
     };
-    await setDoc(doc(gatheringsRef, currentGatheringId), gatheringData);
+    await setDoc(doc(db, "gatherings", currentGatheringId), gatheringData);
 
     const transactionData = {
         event: currentGatheringName,
@@ -351,7 +382,7 @@ async function publishGathering() {
         category: "GatheringIncome",
         description: `Income from ${currentGatheringName} attendance`
     };
-    await addDoc(transactionsRef, transactionData);
+    await addDoc(collection(db, "transactions"), transactionData);
 
     console.log("Gathering published successfully!");
     alert("Gathering published successfully!");
@@ -411,7 +442,7 @@ async function displayPastGathering(gatheringId) {
 
         updateSummaryDisplay(data.attendees.length, data.totalIncome);
         publishBtn.style.display = 'none';
-        renderButtonBlock(`<button id="back-to-gatherings-btn" class="tracker-button">Back to Gatherings</button>`, () => {
+        renderButtonBlock(`<button id="back-btn" class="tracker-button">Back to Gatherings</button>`, () => {
             showView('past-gatherings-view');
             loadPastGatherings();
         });
@@ -420,5 +451,8 @@ async function displayPastGathering(gatheringId) {
 }
 
 // --- Initial setup ---
+// Fetch initial data from Firestore when the application starts
 showView('past-gatherings-view');
 loadPastGatherings();
+fetchSocialFees(); // NEW: Fetch social fees from Firestore
+// bandsmenList is still loaded from local file (no fetchBandsmenList() call yet)
