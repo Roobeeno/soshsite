@@ -27,7 +27,6 @@ const currentAttendanceTbody = document.getElementById('current-attendance-tbody
 const currentGatheringTitle = document.getElementById('current-gathering-title');
 const attendeeCountDisplay = document.getElementById('attendee-count');
 const totalIncomeDisplay = document.getElementById('total-income');
-const currentEntryDisplay = document.getElementById('current-entry-display');
 
 // --- State Variables ---
 let currentEntry = {};
@@ -51,6 +50,51 @@ const fees = {
         non_sober: 5
     }
 };
+
+// --- General Helper Functions ---
+function escapeHtmlAttribute(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+function renderButtonBlock(htmlContent, backCallback) {
+    buttonTreeContainer.innerHTML = htmlContent;
+    const backBtn = document.getElementById('back-btn');
+    if (backBtn) {
+        backBtn.addEventListener('click', backCallback);
+    }
+}
+
+function createAttendeeRow(entry) {
+    const row = document.createElement('tr');
+    const typeDisplay = (entry.type === 'regular' || entry.type === 'social_guest' || entry.type === 'new_social') ?
+        `${entry.type.replace('_', ' ')} (${entry.subType})` :
+        `Social Member`;
+
+    const nameDisplay = (entry.name !== 'Not in Band (NIB)' && entry.type !== 'social_member' && entry.type !== 'new_social') ?
+        `${entry.name} (${entry.type === 'regular' ? 'Regular' : 'Guest'})` :
+        `${entry.name} (Social Member)`;
+    
+    row.innerHTML = `
+        <td>${typeDisplay}</td>
+        <td>${nameDisplay}</td>
+        <td>${entry.section || 'N/A'}</td>
+        <td>${(entry.isSober) ? '✅ Yes' : '❌ No'}</td>
+        <td>${entry.payment}</td>
+        <td>$${(entry.amount || 0).toFixed(2)}</td>
+    `;
+    return row;
+}
+
+function calculateFee(memberType, feeType) {
+    return fees[memberType][feeType];
+}
+
 
 // --- View and Button Handlers ---
 function showView(viewId) {
@@ -77,12 +121,12 @@ function resetAttendanceInput() {
     attendeeEntries = [];
     renderInitialButtons();
     currentAttendanceTbody.innerHTML = '';
-    updateSummary();
+    updateSummaryDisplay();
     publishBtn.style.display = 'block';
 }
 
 function renderInitialButtons() {
-    let buttonsHTML = `
+    const buttonsHTML = `
         <button id="regular-attendee-btn" class="tracker-button" data-type="regular">Regular Attendee</button>
         <button id="social-member-btn" class="tracker-button" data-type="social_member">Social Member</button>
         <button id="new-social-member-btn" class="tracker-button" data-type="new_social">New Social Member</button>
@@ -93,35 +137,60 @@ function renderInitialButtons() {
     document.getElementById('regular-attendee-btn').addEventListener('click', () => renderNameDropdown('regular'));
     document.getElementById('social-member-btn').addEventListener('click', () => renderNameDropdown('social_member'));
     document.getElementById('new-social-member-btn').addEventListener('click', () => renderNameDropdown('potential_social'));
-    document.getElementById('social-guest-btn').addEventListener('click', () => handleSocialGuest());
+    document.getElementById('social-guest-btn').addEventListener('click', () => renderNameDropdown('social_guest'));
 }
 
-// Renders a name dropdown based on member type
 function renderNameDropdown(memberType) {
-    const listToRender = membersList.filter(member => {
-        if (memberType === 'regular') {
-            return !member.isSocialMember;
-        } else if (memberType === 'social_member') {
-            return member.isSocialMember;
-        } else if (memberType === 'potential_social') {
-            return !member.isSocialMember;
-        }
-    });
+    let listToRender = [];
+    let defaultOptionText = "Select a name...";
 
-    const options = listToRender.map(member => `<option value="${member.name}">${member.name} (${member.section})</option>`).join('');
+    const notInBandOption = {
+        name: "Not in Band (NIB)",
+        first_name: "NIB",
+        last_name: "NIB",
+        pronoun: "they/them",
+        band_year: 'N/A',
+        school_year: 'N/A',
+        section: 'N/A',
+        colleges: ['N/A'],
+        majors: ['N/A'],
+        committees: ['N/A'],
+        birthday: 'N/A',
+        isSocialMember: false,
+        isSober: false
+    };
+
+    if (memberType === 'regular') {
+        listToRender = [notInBandOption, ...membersList.filter(member => !member.isSocialMember)];
+    } else if (memberType === 'social_member') {
+        listToRender = membersList.filter(member => member.isSocialMember);
+    } else if (memberType === 'potential_social') {
+        listToRender = membersList.filter(member => !member.isSocialMember);
+    } else if (memberType === 'social_guest') {
+        listToRender = [notInBandOption, ...membersList];
+        defaultOptionText = "Select social guest name...";
+    }
+
+    const options = listToRender.map(member => `<option value="${escapeHtmlAttribute(member.name)}">${member.name} (${member.section})</option>`).join('');
     
-    buttonTreeContainer.innerHTML = `
+    renderButtonBlock(`
         <select id="name-dropdown" class="name-dropdown">
-            <option value="">Select a name...</option>
+            <option value="">${defaultOptionText}</option>
             ${options}
         </select>
+        <button id="next-btn" class="tracker-button">Next</button>
         <button id="back-to-main-btn" class="tracker-button">Back</button>
-    `;
-
-    document.getElementById('back-to-main-btn').addEventListener('click', renderInitialButtons);
+    `, renderInitialButtons);
     
-    document.getElementById('name-dropdown').addEventListener('change', (event) => {
-        const selectedMember = listToRender.find(m => m.name === event.target.value);
+    document.getElementById('next-btn').addEventListener('click', () => {
+        const selectedNameValue = document.getElementById('name-dropdown').value.trim();
+        if (!selectedNameValue) {
+            alert("Please select a name.");
+            return;
+        }
+
+        const selectedMember = listToRender.find(m => m.name.toLowerCase() === selectedNameValue.toLowerCase());
+        
         if (selectedMember) {
             currentEntry = {
                 type: memberType,
@@ -132,59 +201,74 @@ function renderNameDropdown(memberType) {
             };
             
             if (memberType === 'potential_social') {
-                renderNewSocialMemberFeeButtons();
+                renderSocialFees();
             } else {
-                renderSoberButtons();
+                renderSoberButtons(false);
             }
+        } else {
+            alert(`Error: Could not find a member matching "${selectedNameValue}".`);
+            console.error(`Could not find member for value: "${selectedNameValue}"`);
         }
     });
 }
 
-// Renders buttons for the one-time social member fee dynamically
-function renderNewSocialMemberFeeButtons() {
-    let buttonsHTML = `<p>Select One-Time Social Member Fee for ${currentEntry.name}:</p>`;
+function renderSoberButtons(isNewSocialMember) {
+    const backAction = isNewSocialMember ? () => renderNameDropdown('potential_social') : renderInitialButtons;
+    const promptText = isNewSocialMember ? "Is this new social member sober?" : "";
     
-    for (const [feeName, amount] of Object.entries(socialMemberFees)) {
-        buttonsHTML += `<button class="tracker-button" data-fee-name="${feeName}">$${amount} (${feeName})</button>`;
-    }
-    buttonsHTML += `<button id="back-btn" class="tracker-button">Back</button>`;
-    
-    buttonTreeContainer.innerHTML = buttonsHTML;
-
-    document.getElementById('back-btn').addEventListener('click', () => renderNameDropdown('potential_social'));
-
-    buttonTreeContainer.querySelectorAll('button[data-fee-name]').forEach(button => {
-        button.addEventListener('click', (event) => {
-            const feeName = event.target.dataset.fee_name;
-            currentEntry.type = 'new_social';
-            currentEntry.subType = feeName;
-            currentEntry.amount = socialMemberFees[feeName];
-            
-            renderPaymentButtons();
-        });
-    });
-}
-
-function renderSoberButtons() {
-    buttonTreeContainer.innerHTML = `
+    const buttonsHTML = `
         <p>Selected: ${currentEntry.name}</p>
+        ${promptText ? `<p>${promptText}</p>` : ''}
         <button class="tracker-button" data-sober="true">Sober</button>
         <button class="tracker-button" data-sober="false">Non-Sober</button>
         <button id="back-btn" class="tracker-button">Back</button>
     `;
+    
+    renderButtonBlock(buttonsHTML, backAction);
 
-    document.getElementById('back-btn').addEventListener('click', renderInitialButtons);
-
-    buttonTreeContainer.querySelectorAll('button[data-sober]').forEach(button => {
+    document.querySelectorAll('button[data-sober]').forEach(button => {
         button.addEventListener('click', (event) => {
             currentEntry.isSober = event.target.dataset.sober === 'true';
+            if (isNewSocialMember) {
+                renderSocialFees();
+            } else {
+                renderPaymentButtons();
+            }
+        });
+    });
+}
+
+function renderSocialFees() {
+    let buttonsHTML = `<p>Select One-Time Social Member Fee for ${currentEntry.name}:</p>`;
+    
+    // FIX: Get the original fee name and amount from the imported object
+    const relevantFees = Object.entries(socialMemberFees);
+
+    relevantFees.forEach(([feeName, amount]) => {
+        // FIX: Create a clean data-attribute name by replacing spaces with underscores
+        const dataAttributeName = feeName.replace(/\s/g, '_');
+        buttonsHTML += `<button class="tracker-button" data-fee-name="${dataAttributeName}">$${amount} (${feeName})</button>`;
+    });
+
+    buttonsHTML += `<button id="back-btn" class="tracker-button">Back</button>`;
+    
+    renderButtonBlock(buttonsHTML, () => renderNameDropdown('potential_social'));
+
+    document.querySelectorAll('button[data-fee-name]').forEach(button => {
+        button.addEventListener('click', (event) => {
+            // FIX: Map the clean data-attribute name back to the original fee name
+            const dataAttributeName = event.target.dataset.feeName;
+            const originalFeeName = dataAttributeName.replace(/_/g, ' ');
+            
+            currentEntry.subType = originalFeeName;
+            currentEntry.type = 'new_social'; 
             renderPaymentButtons();
         });
     });
 }
 
 function renderPaymentButtons() {
-    buttonTreeContainer.innerHTML = `
+    const buttonsHTML = `
         <p>Payment for: ${currentEntry.name}</p>
         <div class="payment-buttons">
             <button class="tracker-button" data-payment="cash">Cash</button>
@@ -193,15 +277,10 @@ function renderPaymentButtons() {
         <button id="back-btn" class="tracker-button">Back</button>
     `;
 
-    document.getElementById('back-btn').addEventListener('click', () => {
-        if (currentEntry.type === 'potential_social') {
-             renderNewSocialMemberFeeButtons();
-        } else {
-            renderSoberButtons();
-        }
-    });
+    const backAction = currentEntry.type === 'new_social' ? renderSocialFees : () => renderSoberButtons(false);
+    renderButtonBlock(buttonsHTML, backAction);
     
-    buttonTreeContainer.querySelectorAll('button[data-payment]').forEach(button => {
+    document.querySelectorAll('button[data-payment]').forEach(button => {
         button.addEventListener('click', (event) => {
             currentEntry.payment = event.target.dataset.payment;
             handleFinalEntry();
@@ -210,56 +289,39 @@ function renderPaymentButtons() {
 }
 
 function handleFinalEntry() {
-    if (currentEntry.type !== 'new_social') {
+    if (currentEntry.type === 'new_social') {
+        currentEntry.amount = socialMemberFees[currentEntry.subType];
+    } else {
         const feeType = currentEntry.isSober ? 'sober' : 'non_sober';
         currentEntry.amount = calculateFee(currentEntry.type, feeType);
         currentEntry.subType = feeType;
     }
 
     const memberIndex = membersList.findIndex(m => m.name.toLowerCase() === currentEntry.name.toLowerCase());
-    
+    const existingMember = memberIndex !== -1 ? membersList[memberIndex] : null;
+
     if (currentEntry.type === 'new_social') {
-        if (memberIndex !== -1) {
-            membersList[memberIndex].isSocialMember = true;
-        } else {
-            membersList.push({
-                name: currentEntry.name,
-                section: 'N/A', 
-                band_year: 'N/A',
-                isSocialMember: true,
-                isSober: true
-            });
+        existingMember.isSocialMember = true;
+        currentEntry.section = existingMember.section;
+        currentEntry.band_year = existingMember.band_year;
+    } else {
+        if (existingMember) {
+            currentEntry.section = existingMember.section;
+            currentEntry.band_year = existingMember.band_year;
         }
     }
     
     attendeeEntries.push(currentEntry);
 
-    const row = document.createElement('tr');
-    let typeDisplay = currentEntry.type;
-    
-    // NEW: Clean up the display text for "New Social Member"
-    if (currentEntry.type === 'regular' || currentEntry.type === 'social_guest') {
-        typeDisplay = `${currentEntry.type} (${currentEntry.subType})`;
-    } else if (currentEntry.type === 'social_member' || currentEntry.type === 'new_social') {
-        typeDisplay = `Social Member`;
-    }
-
-    row.innerHTML = `
-        <td>${typeDisplay}</td>
-        <td>${currentEntry.name}</td>
-        <td>${currentEntry.section || 'N/A'}</td>
-        <td>${(currentEntry.isSober) ? '✅ Yes' : '❌ No'}</td>
-        <td>${currentEntry.payment}</td>
-    `;
-    currentAttendanceTbody.appendChild(row);
-
+    addAttendeeToTable(); 
     currentEntry = {};
     renderInitialButtons();
-    updateSummary();
+    updateSummaryDisplay();
 }
 
-function calculateFee(memberType, feeType) {
-    return fees[memberType][feeType];
+function addAttendeeToTable() {
+    const row = createAttendeeRow(currentEntry);
+    currentAttendanceTbody.appendChild(row);
 }
 
 async function publishGathering() {
@@ -269,7 +331,6 @@ async function publishGathering() {
         return;
     }
 
-    // NEW: Use parseFloat to ensure numbers are being summed
     const totalIncome = attendeeEntries.reduce((sum, entry) => {
         const amount = parseFloat(entry.amount);
         return sum + (isNaN(amount) ? 0 : amount);
@@ -300,17 +361,17 @@ async function publishGathering() {
     attendeeEntries = [];
 }
 
-function updateSummary() {
-    // NEW: Use parseFloat to ensure numbers are being summed
-    const totalIncome = attendeeEntries.reduce((sum, entry) => {
+function updateSummaryDisplay(count, income) {
+    const totalCount = count || attendeeEntries.length;
+    const totalIncome = income || attendeeEntries.reduce((sum, entry) => {
         const amount = parseFloat(entry.amount);
         return sum + (isNaN(amount) ? 0 : amount);
     }, 0);
-    attendeeCountDisplay.textContent = attendeeEntries.length;
+
+    attendeeCountDisplay.textContent = totalCount;
     totalIncomeDisplay.textContent = totalIncome.toFixed(2);
 }
 
-// Function to load and display all past gatherings
 async function loadPastGatherings() {
     pastGatheringsTableBody.innerHTML = '';
     const querySnapshot = await getDocs(gatheringsRef);
@@ -336,7 +397,6 @@ async function loadPastGatherings() {
     });
 }
 
-// Function to display the details of a past gathering
 async function displayPastGathering(gatheringId) {
     const gatheringDoc = await getDoc(doc(gatheringsRef, gatheringId));
     if (gatheringDoc.exists()) {
@@ -345,40 +405,18 @@ async function displayPastGathering(gatheringId) {
         currentAttendanceTbody.innerHTML = '';
         
         data.attendees.forEach(entry => {
-            const row = document.createElement('tr');
-            
-            let typeDisplay = entry.type;
-            if (entry.type === 'regular' || entry.type === 'social_guest') {
-                typeDisplay = `${entry.type} (${entry.subType})`;
-            } else if (entry.type === 'social_member' || entry.type === 'new_social') {
-                typeDisplay = `Social Member`;
-            }
-
-            row.innerHTML = `
-                <td>${typeDisplay}</td>
-                <td>${entry.name}</td>
-                <td>${entry.section || 'N/A'}</td>
-                <td>${entry.isSober ? '✅ Yes' : '❌ No'}</td>
-                <td>${entry.payment}</td>
-            `;
+            const row = createAttendeeRow(entry);
             currentAttendanceTbody.appendChild(row);
         });
 
         updateSummaryDisplay(data.attendees.length, data.totalIncome);
         publishBtn.style.display = 'none';
-        buttonTreeContainer.innerHTML = `<button id="back-to-gatherings-btn" class="tracker-button">Back to Gatherings</button>`;
-        document.getElementById('back-to-gatherings-btn').addEventListener('click', () => {
+        renderButtonBlock(`<button id="back-to-gatherings-btn" class="tracker-button">Back to Gatherings</button>`, () => {
             showView('past-gatherings-view');
             loadPastGatherings();
         });
         showView('attendance-input-view');
     }
-}
-
-// A helper function to update summary fields for past gatherings
-function updateSummaryDisplay(count, income) {
-    attendeeCountDisplay.textContent = count;
-    totalIncomeDisplay.textContent = income.toFixed(2);
 }
 
 // --- Initial setup ---
