@@ -15,10 +15,8 @@ import {
 // ---------- Firestore Refs ----------
 const transactionsRef = collection(db, "transactions");
 const eventsRef       = collection(db, "events");
-const depositsRef     = doc(db, "meta/deposits");
 
 // ---------- State ----------
-let deposits = 0;
 let transactions = [];  // array of {id, event, date, amount, category, description}
 let firstLoad = true;   // prevents entrance animation storm on initial render
 
@@ -87,22 +85,6 @@ onSnapshot(eventsRef, (snapshot) => {
     const ev = docSnap.data();
     select.options[select.options.length] = new Option(ev.name, ev.name);
   });
-});
-
-// ======================= Realtime: Deposits (right-click on total) =======================
-document.getElementById("totalAmount")?.addEventListener("contextmenu", async (e) => {
-  e.preventDefault();
-  const inputVal = prompt("Input deposit amount (positive for deposit, negative to remove)");
-  if (inputVal === null) return;
-  const num = Number(inputVal);
-  if (Number.isNaN(num)) return alert("Please enter a valid number.");
-  deposits += num;
-  await setDoc(depositsRef, { value: deposits });
-  updateTotal();
-});
-onSnapshot(depositsRef, (docSnap) => {
-  deposits = docSnap.exists() ? Number(docSnap.data().value || 0) : 0;
-  updateTotal();
 });
 
 // ======================= Cards + Animations via docChanges =======================
@@ -218,7 +200,7 @@ document.getElementById("clearDataBtn")?.addEventListener("click", async () => {
 function updateTotal() {
   const sum = transactions.reduce((acc, t) => acc + Number(t.amount || 0), 0);
   const el = document.getElementById("totalAmount");
-  if (el) el.textContent = (sum + Number(deposits)).toFixed(2);
+  if (el) el.textContent = (sum).toFixed(2);
 }
 
 function updateCategoryList(items) {
