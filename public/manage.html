@@ -10,9 +10,19 @@
 <body class="manage">
 
   <div id="loginSection">
-    <input type="email" id="email" placeholder="Enter Email" />
-    <input type="password" id="password" placeholder="Enter Password" />
-    <button onclick="validateLogin()">Login</button>
+    <!-- Google login -->
+    <button id="googleLoginBtn" onclick="loginWithGoogle()" style="
+      display: center; align-items: center; gap: 8px;
+      background: white; color: #555;
+      border: 1px solid #ccc; border-radius: 6px;
+      padding: 10px 16px; font-family: Montserrat; font-weight: 600;
+      cursor: pointer;
+    ">
+      <img src="https://developers.google.com/identity/images/g-logo.png"
+           alt="Google logo"
+           style="width:20px; height:20px;">
+      Sign in with Google
+    </button>
   </div>
 
   <div id="content" style="display:none">
@@ -20,7 +30,8 @@
     <ul style="float: right;">
       <a class="active" style="margin: 10px; font-family: Montserrat;" href="index.html">Back to Display</a>
       <a class="active" style="margin: 10px; font-family: Montserrat;" href="inventory.html">Inventory</a>
-      <a class="active" style="margin: 10px; font-family: Montserrat;" href="admission.html">Gathering Admission</a>
+      <a class="active" style="margin: 10px; font-family: Montserrat;" href="https://docs.google.com/spreadsheets/d/11Gyg4tMYMHiI0J4cJ1WFYOpOeyM_R6seJiLpqy02wN8/edit?gid=1395868536#gid=1395868536">Social Members & Events</a>
+      <a class="active" style="margin: 10px; font-family: Montserrat;" href="https://docs.google.com/spreadsheets/d/1KOVwuLZrashezY_iW17HgW8Gr6oAK8Sq1eia2K6iOCg/edit?gid=0#gid=0">Inventory</a>
     </ul>
   
     <h1 class="page-title" style="margin-right:37%;">THe Soshcomm Budget Tracker Admin</h1>

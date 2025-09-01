@@ -8,10 +8,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 const transactionsRef = collection(db, "transactions");
-const depositsRef     = doc(db, "meta/deposits");
 
 let transactions = [];
-let deposits = 0;
 
 /* ===================== FLIP HELPERS ===================== */
 function capturePositions(container) {
@@ -52,11 +50,6 @@ function playFLIP(container, before) {
 }
 
 /* ================ FIRESTORE SUBSCRIPTIONS ================ */
-onSnapshot(depositsRef, (docSnap) => {
-  deposits = docSnap.exists() ? Number(docSnap.data().value || 0) : 0;
-  updateTotal();
-});
-
 onSnapshot(transactionsRef, (snapshot) => {
   transactions = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
   renderCards(transactions);
@@ -97,7 +90,6 @@ function createCard(docId, item) {
       <div class="category">${item.category}</div>
     </div>
   `;
-  // read-only: no delete handler
   return card;
 }
 
@@ -105,7 +97,7 @@ function createCard(docId, item) {
 function updateTotal() {
   const sum = transactions.reduce((acc, t) => acc + Number(t.amount || 0), 0);
   const el = document.getElementById("totalAmount");
-  if (el) el.textContent = (sum + Number(deposits)).toFixed(2);
+  if (el) el.textContent = (sum).toFixed(2);
 }
 
 function updateCategoryList(items) {

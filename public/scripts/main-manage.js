@@ -1,37 +1,59 @@
-// main-manage.js — manage view with bounce-in / swoosh-out card animations (no table, no chart)
-
+// scripts/main-manage.js
 import { auth, db } from "./firebase-init.js";
-import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 import {
-  collection,
-  addDoc,
-  getDocs,
-  deleteDoc,
-  doc,
-  onSnapshot,
-  setDoc
+  collection, addDoc, getDocs, deleteDoc, doc, onSnapshot, getDoc
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+import {
+  GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 
-// ---------- Firestore Refs ----------
+// ---------- Firestore References ----------
 const transactionsRef = collection(db, "transactions");
 const eventsRef       = collection(db, "events");
 
-// ---------- State ----------
-let transactions = [];  // array of {id, event, date, amount, category, description}
-let firstLoad = true;   // prevents entrance animation storm on initial render
+// ---------- Global State ----------
+let transactions = [];
 
-// ======================= AUTH =======================
-window.validateLogin = async function () {
-  const email    = document.getElementById("email")?.value || "";
-  const password = document.getElementById("password")?.value || "";
+// ---------- Google Auth Setup ----------
+const provider = new GoogleAuthProvider();
+
+// ---------- Auth Actions ----------
+window.logout = () => signOut(auth);
+window.loginWithGoogle = async () => {
   try {
-    await signInWithEmailAndPassword(auth, email, password);
-    document.getElementById("loginSection").style.display = "none";
-    document.getElementById("content").style.display = "block";
-  } catch (err) {
-    alert("Login failed: " + err.message);
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+
+    // Check if user UID exists in /admins
+    const adminDocRef = doc(db, "admins", user.uid);
+    const adminDoc = await getDoc(adminDocRef);
+
+    if (!adminDoc.exists()) {
+      alert("You are not authorized to access admin features.");
+      await signOut(auth);
+      return;
+    } else {
+      console.log("Welcome, admin:", user.email);
+    }
+
+  } catch (error) {
+    alert("Login failed: " + error.message);
+    await signOut(auth);
+    return;
   }
 };
+
+// ---------- Auth State Listener ----------
+onAuthStateChanged(auth, user => {
+  if (!user) {
+    document.getElementById("loginSection").style.display = "block";
+    document.getElementById("content").style.display = "none";
+  } else {
+    document.getElementById("loginSection").style.display = "none";
+    document.getElementById("content").style.display = "block";
+  }
+});
+
 
 // ======================= FORM ADD =======================
 window.addRow = async function () {
@@ -89,52 +111,23 @@ onSnapshot(eventsRef, (snapshot) => {
 
 // ======================= Cards + Animations via docChanges =======================
 onSnapshot(transactionsRef, (snapshot) => {
-  // 1) Keep an array for totals + category list
+  // 1. Map documents to the 'transactions' array
   transactions = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  // 2. Call the rendering functions
+  renderCards(transactions);
   updateTotal();
   updateCategoryList(transactions);
-
-  // 2) Animate add/modify/remove incrementally
-  const wrap = document.getElementById("cards");
-  if (!wrap) return;
-
-  if (firstLoad) {
-    // Initial paint: build all cards without entrance animation
-    wrap.innerHTML = "";
-    transactions.forEach(item => wrap.appendChild(createCard(item.id, item)));
-    firstLoad = false;
-    return;
-  }
-
-  snapshot.docChanges().forEach(change => {
-    const id = change.doc.id;
-    const data = change.doc.data();
-
-    if (change.type === "added") {
-      // Guard against duplicates if Firestore reorders
-      if (!wrap.querySelector(`[data-id="${id}"]`)) {
-        const card = createCard(id, data);
-        wrap.prepend(card);            // newest on top
-        animateInsertBounce(card);
-      }
-    }
-
-    if (change.type === "modified") {
-      const old = wrap.querySelector(`[data-id="${id}"]`);
-      const fresh = createCard(id, data);
-      if (old) old.replaceWith(fresh);
-      // subtle nudge to indicate change
-      animateInsertBounce(fresh, /*quick*/ true);
-    }
-
-    if (change.type === "removed") {
-      const card = wrap.querySelector(`[data-id="${id}"]`);
-      if (card) animateRemoveSwoosh(card, () => card.remove());
-    }
-  });
 });
 
 // ======================= Render helpers =======================
+function renderCards(items) {
+  const wrap  = document.getElementById("cards");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  items.forEach(item => wrap.appendChild(createCard(item.id, item)));
+}
+
 function createCard(docId, item) {
   const card = document.createElement("div");
   card.className = "txn-card";
