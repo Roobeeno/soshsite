@@ -7,10 +7,9 @@
   --pos: #27932E;
   --neg: #E85B5B;
   --radius: 20px;
-  --toolbar-max: 1200px;  /* wider row so pills don’t feel cramped */
-  /* Layout constants; override via body classes per page */
-  --header-h: 120px;   /* title + balance + spacing */
-  --toolbar-h: 0px;    /* set to 104px on manage page */
+  --toolbar-max: 1200px;  
+  --header-h: 120px;   
+  --toolbar-h: 0px;    
   --footer-h: 0px;
 }
 
@@ -20,7 +19,6 @@
   font-style: normal;
 }
 
-/* Lock the page; only cards will scroll */
 html, body{
   height: 100%;
   overflow: hidden;
@@ -30,16 +28,13 @@ html, body{
 body{
   margin: 0;
   min-height: 100vh;
-  /* center + fill, may crop edges to avoid distortion */
   background: url("screenshot.png") center center / cover no-repeat;
   background-color:#D8F2EF;
   padding:20px;
   text-align:center;
-  /* keep background steady on desktop */
   background-attachment: fixed;
 }
 @media (max-width: 900px){
-  /* iOS/mobile fix */
   body{ background-attachment: scroll; }
 }
 
@@ -52,7 +47,7 @@ h2{ font-size:20px; margin-bottom:10px; }
   font-size: 2rem;
   text-align: center;
   margin-right: 45%;
-  margin-top: 100px; /* adjust to taste */
+  margin-top: 100px;
 }
 
 .parent{ display:flex; justify-content:center; align-items:center; text-align:center; }
@@ -60,13 +55,13 @@ h2{ font-size:20px; margin-bottom:10px; }
 
 .my-chart{ width:100%!important; height:100%!important;}
 #budgetChart {
-  background: rgba(255,255,255,0.75); /* subtle translucency without fading the data */
+  background: rgba(255,255,255,0.75); 
   padding: 20px;
 }
 
 .hidden{ display:none; }
 
-/* ================= Toolbar (single, definitive) =================
+/* ================= Toolbar  =================
    Event | + | Date | Amount | Category | Description | CTA */
 .manage-toolbar{
   display:grid;
@@ -100,7 +95,7 @@ h2{ font-size:20px; margin-bottom:10px; }
 
 .rect-input{
   width:100%;
-  min-width:120px;          /* prevent squish */
+  min-width:120px;        
   padding:0 14px;
   outline:none;
   background-clip:padding-box;
@@ -137,7 +132,6 @@ h2{ font-size:20px; margin-bottom:10px; }
   .manage-toolbar{
     grid-template-columns: 1fr 60px 1fr;
   }
-  /* stack remaining items full-width on next rows */
   .manage-toolbar > :nth-child(4),
   .manage-toolbar > :nth-child(5),
   .manage-toolbar > :nth-child(6),
@@ -146,23 +140,28 @@ h2{ font-size:20px; margin-bottom:10px; }
   }
 }
 
-/* ================= Cards list (the ONLY scroller) ================= */
+/* ================= Cards list================= */
 .cards{
   display:flex;
   flex-direction:column;
   gap:16px;
   max-width:var(--toolbar-max);
   margin:0 auto;
-  overflow-y:auto;                 /* independent scrolling */
+  overflow-y:auto;           
   -webkit-overflow-scrolling:touch;
   height: calc(100vh - var(--header-h) - var(--toolbar-h) - var(--footer-h) - 24px);
-  padding-right: 6px;              /* avoid scrollbar overlay */
+  padding-right: 6px;           
 }
 
-/* One transaction card */
+.scroll-container {
+  overflow: auto;
+  height: 62vh;
+  white-space: nowrap;
+}
+
 .txn-card{
   display:grid;
-  grid-template-columns: 320px 1fr 220px;  /* left | middle | right */
+  grid-template-columns: minmax(180px, 1fr) minmax(120px, 2fr) minmax(100px, auto);
   align-items:center;
   min-height:80px;
   padding:14px 18px;
@@ -180,7 +179,7 @@ h2{ font-size:20px; margin-bottom:10px; }
 .txn-left{ display:flex; flex-direction:column; gap:px; color:#000; }
 .txn-left .event, .txn-left .date{ font-weight:400; font-size:25px; line-height:37px; }
 
-.txn-mid{ display:flex; align-items:center; gap:12px; }
+.txn-mid{ display:flex; align-items:center; gap:12px; border: 1px;}
 .txn-mid .amount{ font-weight:700; font-size:40px; line-height:49px; }
 .txn-mid .amount.positive{ color:var(--pos); }
 .txn-mid .amount.negative{ color:var(--neg); }
@@ -193,8 +192,12 @@ h2{ font-size:20px; margin-bottom:10px; }
   border:1px solid rgba(0,0,0,.10);
   padding:8px 14px; border-radius:14px;
 }
+@media (max-width: 57em) {
+  .txn-right .category {
+    display: none;
+  }
+}
 
-/* ===== Readonly card stacking on mobile ===== */
 @media (max-width:900px){
   .txn-card{ grid-template-columns:1fr; gap:10px; }
   .txn-right{ justify-content:flex-start; }
@@ -231,10 +234,10 @@ h2{ font-size:20px; margin-bottom:10px; }
   padding-bottom: 0 !important;
 }
 
-/* ===== Page-specific overrides via body classes ===== */
+
 body.manage{
-  --toolbar-h: 104px;  /* toolbar present */
+  --toolbar-h: 104px; 
 }
 body.readonly{
-  --toolbar-h: 0px;    /* no toolbar */
+  --toolbar-h: 0px;  
 }

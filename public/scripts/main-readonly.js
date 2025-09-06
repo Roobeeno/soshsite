@@ -1,5 +1,3 @@
-// main-readonly.js — cards-only view with FLIP sorting (no table, no chart)
-
 import { db } from "./firebase-init.js";
 import {
   collection,
@@ -164,6 +162,6 @@ function applyCurrentSort() {
   sortCards(fieldSel.value, dirSel.value);
 }
 
-// Wire sort controls if present
+
 document.getElementById("sortField")?.addEventListener("change", applyCurrentSort);
 document.getElementById("sortDir")?.addEventListener("change", applyCurrentSort);

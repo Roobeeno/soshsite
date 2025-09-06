@@ -7,24 +7,19 @@ import {
   GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 
-// ---------- Firestore References ----------
 const transactionsRef = collection(db, "transactions");
 const eventsRef       = collection(db, "events");
 
-// ---------- Global State ----------
 let transactions = [];
 
-// ---------- Google Auth Setup ----------
 const provider = new GoogleAuthProvider();
 
-// ---------- Auth Actions ----------
 window.logout = () => signOut(auth);
 window.loginWithGoogle = async () => {
   try {
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
 
-    // Check if user UID exists in /admins
     const adminDocRef = doc(db, "admins", user.uid);
     const adminDoc = await getDoc(adminDocRef);
 
@@ -81,7 +76,6 @@ window.addRow = async function () {
   }
 };
 
-// Add Event button (small square)
 window.addEvent = async function () {
   const newEvent = prompt("Create New Event");
   if (!newEvent) return;
@@ -98,7 +92,7 @@ window.addEvent = async function () {
   await addDoc(eventsRef, { name: newEvent });
 };
 
-// ======================= Realtime: Events Dropdown =======================
+// ======================= Events Dropdown =======================
 onSnapshot(eventsRef, (snapshot) => {
   const select = document.getElementById("events");
   if (!select) return;
@@ -109,12 +103,9 @@ onSnapshot(eventsRef, (snapshot) => {
   });
 });
 
-// ======================= Cards + Animations via docChanges =======================
+// ======================= Cards + Animations=======================
 onSnapshot(transactionsRef, (snapshot) => {
-  // 1. Map documents to the 'transactions' array
   transactions = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-
-  // 2. Call the rendering functions
   renderCards(transactions);
   updateTotal();
   updateCategoryList(transactions);
@@ -163,7 +154,7 @@ function createCard(docId, item) {
   return card;
 }
 
-// ---- Animations ----
+// ---- Animations ---- Todo: reintegrate
 function animateInsertBounce(el, quick = false) {
   el.classList.remove("enter-bounce-quick", "enter-bounce");
   el.classList.add(quick ? "enter-bounce-quick" : "enter-bounce");
@@ -173,7 +164,6 @@ function animateInsertBounce(el, quick = false) {
 }
 
 function animateRemoveSwoosh(el, done) {
-  // Lock height so we can collapse smoothly at the end
   el.style.maxHeight = el.offsetHeight + "px";
   el.classList.add("exit-swoosh");
   el.addEventListener("animationend", () => {
@@ -182,7 +172,7 @@ function animateRemoveSwoosh(el, done) {
   }, { once: true });
 }
 
-// ======================= Clear All (danger) =======================
+// ======================= Clear All =======================
 document.getElementById("clearDataBtn")?.addEventListener("click", async () => {
   if (!confirm("Are you sure you want to delete all saved transactions?")) return;
   const snap = await getDocs(transactionsRef);

@@ -1,5 +1,3 @@
-// chart.js — dedicated chart page (no table). Firestore → array → Chart.js
-
 import { db } from "./firebase-init.js";
 import {
   collection,
