@@ -1,74 +1,224 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sosh Comm Budgeting - Manage</title>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles/tablestyle.css" />
-</head>
-<body class="manage">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#123a63" />
+    <title>Soshcomm Budget — Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles/tablestyle.css" />
+  </head>
+  <body class="manage">
+    <section id="loginSection" class="login-page">
+      <div class="login-card">
+        <a class="brand login-brand" href="index.html">Soshcomm</a>
+        <p class="eyebrow dark">Budget administration</p>
+        <h1>Sign in to manage transactions</h1>
+        <p class="login-copy">
+          Admin access is restricted to approved Soshcomm accounts.
+        </p>
+        <button
+          id="googleLoginBtn"
+          class="google-button"
+          onclick="loginWithGoogle()"
+        >
+          <img
+            src="https://developers.google.com/identity/images/g-logo.png"
+            alt=""
+          />
+          Sign in with Google
+        </button>
+        <a class="text-link" href="index.html">← Back to transactions</a>
+      </div>
+    </section>
 
-  <div id="loginSection">
-    <!-- Google login -->
-    <button id="googleLoginBtn" onclick="loginWithGoogle()" style="
-      display: center; align-items: center; gap: 8px;
-      background: white; color: #555;
-      border: 1px solid #ccc; border-radius: 6px;
-      padding: 10px 16px; font-family: Montserrat; font-weight: 600;
-      cursor: pointer;
-    ">
-      <img src="https://developers.google.com/identity/images/g-logo.png"
-           alt="Google logo"
-           style="width:20px; height:20px;">
-      Sign in with Google
-    </button>
-  </div>
+    <div id="content" class="hidden">
+      <header class="site-header admin-header">
+        <nav class="topnav page-shell" aria-label="Primary navigation">
+          <a class="brand" href="index.html">Soshcomm</a>
+          <div class="nav-links">
+            <a class="nav-link" href="index.html">Transactions</a>
+            <a class="nav-link" href="chart.html">Analytics</a>
+            <a class="nav-link active" href="manage.html">Admin</a>
+            <button class="nav-button" onclick="logout()">Sign out</button>
+          </div>
+        </nav>
 
-  <div id="content" style="display:none">
+        <div class="admin-hero page-shell">
+          <div>
+            <p class="eyebrow">Administration</p>
+            <h1>Budget management</h1>
+            <p class="hero-copy">
+              Add and manage transactions for one school year at a time.
+            </p>
+          </div>
+          <div class="admin-year-stack">
+            <label
+              class="school-year-control school-year-control-dark"
+              for="schoolYearSelector"
+            >
+              <span>School year</span>
+              <select
+                id="schoolYearSelector"
+                aria-label="Choose school year"
+              ></select>
+            </label>
+            <div class="compact-balance">
+              <span>Year balance</span>
+              <strong>$<span id="totalAmount">0.00</span></strong>
+            </div>
+          </div>
+        </div>
+      </header>
 
-    <ul style="float: right;">
-      <a class="active" style="margin: 10px; font-family: Montserrat;" href="index.html">Back to Display</a>
-      <a class="active" style="margin: 10px; font-family: Montserrat;" href="inventory.html">Inventory</a>
-      <a class="active" style="margin: 10px; font-family: Montserrat;" href="https://docs.google.com/spreadsheets/d/11Gyg4tMYMHiI0J4cJ1WFYOpOeyM_R6seJiLpqy02wN8/edit?gid=1395868536#gid=1395868536">Social Members & Events</a>
-      <a class="active" style="margin: 10px; font-family: Montserrat;" href="https://docs.google.com/spreadsheets/d/1KOVwuLZrashezY_iW17HgW8Gr6oAK8Sq1eia2K6iOCg/edit?gid=0#gid=0">Inventory</a>
-    </ul>
-  
-    <h1 class="page-title" style="margin-right:37%;">THe Soshcomm Budget Tracker Admin</h1>
+      <main class="page-shell admin-main">
+        <div class="school-year-notice">
+          <div>
+            <strong id="adminSchoolYearLabel">School year</strong>
+            <span id="adminSchoolYearRange">Jul 1 – Jun 30</span>
+          </div>
+          <p>
+            Only transactions whose date falls inside this school year are shown
+            and counted.
+          </p>
+        </div>
 
-    <h2 style="margin:6px 0 0; margin-right: 63%;">Current Balance: $<span id="totalAmount">0.00</span></h2>
+        <section class="panel transaction-form-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow dark">New entry</p>
+              <h2>Add transaction</h2>
+            </div>
+            <div class="external-links">
+              <a
+                href="https://docs.google.com/spreadsheets/d/11Gyg4tMYMHiI0J4cJ1WFYOpOeyM_R6seJiLpqy02wN8/edit?gid=1395868536#gid=1395868536"
+                target="_blank"
+                rel="noopener"
+                >Members &amp; Events ↗</a
+              >
+              <a
+                href="https://docs.google.com/spreadsheets/d/1KOVwuLZrashezY_iW17HgW8Gr6oAK8Sq1eia2K6iOCg/edit?gid=0#gid=0"
+                target="_blank"
+                rel="noopener"
+                >Inventory ↗</a
+              >
+            </div>
+          </div>
 
-  <div class="manage-toolbar">
-  <select id="events" class="rect-input" title="Event"></select>
-  <button class="rect-square" aria-label="Add Event" onclick="addEvent()">＋</button>
-  <input id="date" class="rect-input" type="text" placeholder="MM/DD/YYYY" />
-  <input id="transactionAmount" class="rect-input" type="number" step="0.01" placeholder="Amount ($)" />
+          <div class="manage-toolbar">
+            <label class="form-field field-event">
+              <span>Event</span>
+              <div class="event-control">
+                <select id="events" class="rect-input" title="Event"></select>
+                <button
+                  class="rect-square"
+                  type="button"
+                  aria-label="Add a new event"
+                  onclick="addEvent()"
+                >
+                  ＋
+                </button>
+              </div>
+            </label>
 
-  <select id="categories" class="rect-input">
-    <option value="FoodAndBev">Food &amp; Beverage</option>
-    <option value="Alcohol">Alcohol</option>
-    <option value="Decor">Decor</option>
-    <option value="Services">Service</option>
-    <option value="Reimbursement">Reimbursement</option>
-    <option value="Dues">Social Dues</option>
-    <option value="Door">Door Fee</option>
-    <option value="Fine">Fine</option>
-    <option value="Other">Other</option>
-  </select>
+            <label class="form-field">
+              <span>Date</span>
+              <input id="date" class="rect-input" type="date" />
+              <small id="dateSchoolYearHint"
+                >Must fall within the selected school year.</small
+              >
+            </label>
 
-  <input id="description" class="rect-input" type="text" placeholder="Description of Purchase" />
+            <label class="form-field">
+              <span>Amount</span>
+              <input
+                id="transactionAmount"
+                class="rect-input"
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                inputmode="decimal"
+              />
+              <small>Use a negative number for spending.</small>
+            </label>
 
-  <button class="rect-cta" onclick="addRow()">Add Transaction</button>
-</div>
+            <label class="form-field">
+              <span>Category</span>
+              <select id="categories" class="rect-input">
+                <option value="FoodAndBev">Food &amp; Beverage</option>
+                <option value="Alcohol">Alcohol</option>
+                <option value="Decor">Decor</option>
+                <option value="Services">Services</option>
+                <option value="Reimbursement">Reimbursement</option>
+                <option value="Dues">Social Dues</option>
+                <option value="Door">Door Fee</option>
+                <option value="Fine">Fine</option>
+                <option value="Other">Other</option>
+              </select>
+            </label>
 
-<div class="scroll-container">
-  <div id="cards" class="cards"></div>
-  <button id="clearDataBtn">Clear All Data</button>
-</div>
+            <label class="form-field field-description">
+              <span>Description</span>
+              <input
+                id="description"
+                class="rect-input"
+                type="text"
+                placeholder="What was this transaction for?"
+                maxlength="180"
+              />
+            </label>
 
-</div>
+            <div class="form-actions">
+              <button class="rect-cta" type="button" onclick="addRow()">
+                Add transaction
+              </button>
+            </div>
+          </div>
+        </section>
 
-  <script type="module" src="./scripts/firebase-init.js"></script>
-  <script type="module" src="./scripts/main-manage.js"></script>
-</body>
+        <section class="admin-transactions">
+          <div class="section-heading admin-list-heading">
+            <div>
+              <p class="eyebrow dark">
+                Ledger · <span id="ledgerSchoolYear">School year</span>
+              </p>
+              <h2>
+                Transactions
+                <span id="transactionCount" class="count-badge">0</span>
+              </h2>
+            </div>
+            <p class="admin-hint">
+              Use the delete button on an entry to remove it.
+            </p>
+          </div>
+
+          <div id="cards" class="cards admin-cards" aria-live="polite"></div>
+          <div id="adminEmptyState" class="empty-state hidden">
+            <h3>No transactions in this school year</h3>
+            <p>Add a transaction above or choose another school year.</p>
+          </div>
+        </section>
+
+        <section class="danger-zone">
+          <div>
+            <h3>Danger zone</h3>
+            <p id="dangerZoneCopy">
+              Permanently delete every transaction in the selected school year.
+            </p>
+          </div>
+          <button id="clearDataBtn" class="danger-button" type="button">
+            Clear this school year
+          </button>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="./scripts/firebase-init.js"></script>
+    <script type="module" src="./scripts/main-manage.js"></script>
+  </body>
 </html>

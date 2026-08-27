@@ -2,166 +2,219 @@ import { db } from "./firebase-init.js";
 import {
   collection,
   onSnapshot,
-  doc
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+import {
+  filterTransactionsBySchoolYear,
+  populateSchoolYearSelect,
+  resolveSelectedSchoolYear,
+  saveSchoolYear,
+  schoolYearDateRangeLabel,
+  schoolYearLabel,
+} from "./school-year.js";
 
 const transactionsRef = collection(db, "transactions");
-
-let transactions = [];
-
-/* ===================== FLIP HELPERS ===================== */
-function capturePositions(container) {
-  const map = new Map();
-  Array.from(container.children).forEach(el => {
-    map.set(el, el.getBoundingClientRect());
-  });
-  return map;
-}
-
-function playFLIP(container, before) {
-  const after = new Map();
-  Array.from(container.children).forEach(el => {
-    after.set(el, el.getBoundingClientRect());
-  });
-
-  const reduced =
-    window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  after.forEach((afterBox, el) => {
-    const prior = before.get(el);
-    if (!prior) return;
-
-    const dx = prior.left - afterBox.left;
-    const dy = prior.top  - afterBox.top;
-
-    if (dx || dy) {
-      el.style.transform = `translate(${dx}px, ${dy}px)`;
-      el.style.transition = 'none';
-      requestAnimationFrame(() => {
-        // force layout
-        void el.offsetHeight;
-        el.style.transition = reduced ? 'none' : '';
-        el.style.transform = '';
-      });
-    }
-  });
-}
-
-/* ================ FIRESTORE SUBSCRIPTIONS ================ */
-onSnapshot(transactionsRef, (snapshot) => {
-  transactions = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-  renderCards(transactions);
-  updateTotal();
-  updateCategoryList(transactions);
-  applyCurrentSort(); // keep current sort after refresh
+const money = new Intl.NumberFormat("en-US", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
 });
 
-/* ======================== RENDER ========================= */
-function renderCards(items) {
-  const wrap  = document.getElementById("cards");
-  if (!wrap) return;
-  wrap.innerHTML = "";
-  items.forEach(item => wrap.appendChild(createCard(item.id, item)));
+let allTransactions = [];
+let selectedSchoolYear = "";
+let searchTerm = "";
+let sortPreset = "date-desc";
+
+const categoryLabels = {
+  FoodAndBev: "Food & Bev",
+  Alcohol: "Alcohol",
+  Decor: "Decor",
+  Services: "Services",
+  Service: "Services",
+  Reimbursement: "Reimbursement",
+  Dues: "Social Dues",
+  Door: "Door Fee",
+  Fine: "Fine",
+  Other: "Other",
+};
+
+onSnapshot(transactionsRef, (snapshot) => {
+  allTransactions = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+  selectedSchoolYear = resolveSelectedSchoolYear(
+    allTransactions,
+    selectedSchoolYear,
+  );
+  selectedSchoolYear = populateSchoolYearSelect(
+    document.getElementById("schoolYearSelector"),
+    allTransactions,
+    selectedSchoolYear,
+  );
+  refreshPage();
+});
+
+document
+  .getElementById("schoolYearSelector")
+  ?.addEventListener("change", (event) => {
+    selectedSchoolYear = event.target.value;
+    saveSchoolYear(selectedSchoolYear);
+    refreshPage();
+  });
+
+document
+  .getElementById("transactionSearch")
+  ?.addEventListener("input", (event) => {
+    searchTerm = event.target.value.trim().toLowerCase();
+    renderCurrentView();
+  });
+
+document.getElementById("sortPreset")?.addEventListener("change", (event) => {
+  sortPreset = event.target.value;
+  renderCurrentView();
+});
+
+function schoolYearTransactions() {
+  return filterTransactionsBySchoolYear(allTransactions, selectedSchoolYear);
 }
 
-function createCard(docId, item) {
-  const card = document.createElement('div');
-  card.className = 'txn-card';
-  card.dataset.id       = docId;
-  card.dataset.event    = item.event || "";
-  card.dataset.date     = item.date || "";
-  card.dataset.amount   = String(item.amount ?? 0);
-  card.dataset.category = item.category || "";
+function refreshPage() {
+  updateSchoolYearCopy();
+  updateSummary();
+  renderCurrentView();
+}
 
-  card.innerHTML = `
-    <div class="txn-left">
-      <div class="event">Event: ${item.event}</div>
-      <div class="date">Date: ${item.date}</div>
-    </div>
-    <div class="txn-mid">
-      <div class="amount ${item.amount >= 0 ? 'positive' : 'negative'}">
-        ${item.amount >= 0 ? '$' : '-$'}${Math.abs(Number(item.amount)).toFixed(2)}
-      </div>
-      <div class="desc">${item.description || ''}</div>
-    </div>
-    <div class="txn-right">
-      <div class="category">${item.category}</div>
-    </div>
-  `;
+function updateSchoolYearCopy() {
+  const label = schoolYearLabel(selectedSchoolYear);
+  setText("activitySchoolYear", `${label} school year`);
+  setText("schoolYearRange", schoolYearDateRangeLabel(selectedSchoolYear));
+}
+
+function updateSummary() {
+  const transactions = schoolYearTransactions();
+  const income = transactions.reduce((sum, t) => {
+    const amount = Number(t.amount) || 0;
+    return amount > 0 ? sum + amount : sum;
+  }, 0);
+
+  const expense = transactions.reduce((sum, t) => {
+    const amount = Number(t.amount) || 0;
+    return amount < 0 ? sum + Math.abs(amount) : sum;
+  }, 0);
+
+  setText("totalAmount", money.format(income - expense));
+  setText("incomeTotal", money.format(income));
+  setText("expenseTotal", money.format(expense));
+  setText("transactionCount", String(transactions.length));
+}
+
+function renderCurrentView() {
+  const transactions = schoolYearTransactions();
+  const filtered = transactions.filter((item) => {
+    if (!searchTerm) return true;
+    const haystack = [
+      item.event,
+      item.description,
+      item.category,
+      categoryLabel(item.category),
+      item.date,
+    ]
+      .join(" ")
+      .toLowerCase();
+    return haystack.includes(searchTerm);
+  });
+
+  const sorted = [...filtered].sort(sortComparator(sortPreset));
+  renderCards(sorted);
+
+  const empty = document.getElementById("emptyState");
+  if (empty) empty.classList.toggle("hidden", sorted.length !== 0);
+}
+
+function renderCards(items) {
+  const wrap = document.getElementById("cards");
+  if (!wrap) return;
+  wrap.replaceChildren(...items.map(createCard));
+}
+
+function createCard(item) {
+  const card = el("article", "txn-card");
+
+  const main = el("div", "txn-main");
+  const event = el("h3", "txn-event", item.event || "Untitled event");
+  const desc = el("p", "txn-desc", item.description || "No description");
+  const meta = el("div", "txn-meta");
+  meta.append(
+    el("span", "txn-date", prettyDate(item.date)),
+    el("span", "category", categoryLabel(item.category)),
+  );
+  main.append(event, desc, meta);
+
+  const side = el("div", "txn-side");
+  const amountValue = Number(item.amount) || 0;
+  side.append(
+    el(
+      "div",
+      `amount ${amountValue >= 0 ? "positive" : "negative"}`,
+      `${amountValue >= 0 ? "+$" : "−$"}${money.format(Math.abs(amountValue))}`,
+    ),
+  );
+
+  card.append(main, side);
   return card;
 }
 
-/* ================== TOTALS + CATEGORY LIST ================= */
-function updateTotal() {
-  const sum = transactions.reduce((acc, t) => acc + Number(t.amount || 0), 0);
-  const el = document.getElementById("totalAmount");
-  if (el) el.textContent = (sum).toFixed(2);
-}
+function sortComparator(preset) {
+  const [field, direction] = preset.split("-");
+  const multiplier = direction === "asc" ? 1 : -1;
 
-function updateCategoryList(items) {
-  const totals = {};
-  items.forEach(t => {
-    const cat = t.category || "Other";
-    const amt = Number(t.amount) || 0;
-    totals[cat] = (totals[cat] || 0) + amt;
-  });
-  const ul = document.querySelector(".details ul");
-  if (!ul) return;
-  ul.innerHTML = "";
-  Object.keys(totals).forEach(cat => {
-    const li = document.createElement("li");
-    li.innerHTML = `${cat}: <span class='percentage'>$${totals[cat].toFixed(2)}</span>`;
-    ul.appendChild(li);
-  });
-}
-
-/* ======================== SORTING ======================== */
-// expects cards carry data-*: event, date, amount, category
-function parseDateMMDDYYYY(s) {
-  const [m, d, y] = (s || "").split("/").map(Number);
-  if (!m || !d || !y) return new Date(0);
-  return new Date(y, m - 1, d);
-}
-
-function sortCards(field, dir) {
-  const wrap = document.getElementById("cards");
-  if (!wrap) return;
-
-  const before = capturePositions(wrap); // FIRST
-
-  const mult = dir === "asc" ? 1 : -1;
-  const cards = Array.from(wrap.children);
-
-  cards.sort((a, b) => {
-    let av = a.dataset[field] || '';
-    let bv = b.dataset[field] || '';
-
-    if (field === 'amount') {
-      av = parseFloat(av) || 0; bv = parseFloat(bv) || 0;
-      return mult * (av - bv);
+  return (a, b) => {
+    if (field === "date") {
+      return multiplier * (parseDate(a.date) - parseDate(b.date));
     }
-    if (field === 'date') {
-      const ad = parseDateMMDDYYYY(av);
-      const bd = parseDateMMDDYYYY(bv);
-      return mult * (ad - bd);
+    if (field === "amount") {
+      return multiplier * ((Number(a.amount) || 0) - (Number(b.amount) || 0));
     }
-    return mult * av.localeCompare(bv);
-  });
 
-  // LAST
-  cards.forEach(c => wrap.appendChild(c));
-
-  // INVERT + PLAY
-  playFLIP(wrap, before);
+    const av =
+      field === "category" ? categoryLabel(a.category) : a[field] || "";
+    const bv =
+      field === "category" ? categoryLabel(b.category) : b[field] || "";
+    return multiplier * String(av).localeCompare(String(bv));
+  };
 }
 
-function applyCurrentSort() {
-  const fieldSel = document.getElementById("sortField");
-  const dirSel   = document.getElementById("sortDir");
-  if (!fieldSel || !dirSel) return;
-  sortCards(fieldSel.value, dirSel.value);
+function parseDate(value) {
+  const [m, d, y] = String(value || "")
+    .split("/")
+    .map(Number);
+  if (!m || !d || !y) return 0;
+  return new Date(y, m - 1, d).getTime();
 }
 
+function prettyDate(value) {
+  const [m, d, y] = String(value || "")
+    .split("/")
+    .map(Number);
+  if (!m || !d || !y) return value || "No date";
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(y, m - 1, d));
+}
 
-document.getElementById("sortField")?.addEventListener("change", applyCurrentSort);
-document.getElementById("sortDir")?.addEventListener("change", applyCurrentSort);
+function categoryLabel(value) {
+  return (
+    categoryLabels[value] ||
+    String(value || "Other").replace(/([a-z])([A-Z])/g, "$1 $2")
+  );
+}
+
+function setText(id, value) {
+  const node = document.getElementById(id);
+  if (node) node.textContent = value;
+}
+
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}

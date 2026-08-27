@@ -1,33 +1,113 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sosh Comm — Chart</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#123a63" />
+    <title>Soshcomm Budget — Analytics</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles/tablestyle.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body class="analytics-page">
+    <header class="site-header analytics-header">
+      <nav class="topnav page-shell" aria-label="Primary navigation">
+        <a class="brand" href="index.html">Soshcomm</a>
+        <div class="nav-links">
+          <a class="nav-link" href="index.html">Transactions</a>
+          <a class="nav-link active" href="chart.html">Analytics</a>
+          <a class="nav-link nav-admin" href="manage.html">Admin</a>
+        </div>
+      </nav>
 
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles/tablestyle.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body style="text-align:center; padding:20px;">
-  <h1 style="margin:0 0 10px;">Cash Flow Bar Chart</h1>
+      <div class="analytics-hero page-shell">
+        <div>
+          <p class="eyebrow">Analytics</p>
+          <h1>See the shape of your spending.</h1>
+          <p class="hero-copy">
+            Compare income, expenses, and net cash flow within one school year.
+          </p>
+        </div>
+        <label
+          class="school-year-control school-year-control-dark"
+          for="schoolYearSelector"
+        >
+          <span>School year</span>
+          <select
+            id="schoolYearSelector"
+            aria-label="Choose school year"
+          ></select>
+        </label>
+      </div>
+    </header>
 
-  <div style="margin: 10px 0 20px;">
-    <select id="chartModeSelector">
-      <option value="incomeEvent">Income by Event</option>
-      <option value="expenseEvent">Expenditure by Event</option>
-      <option value="incomeCategory">Income by Category</option>
-      <option value="expenseCategory">Expenditure by Category</option>
-      <option value="netEvent">Net by Event</option>
-      <option value="netCategory">Net by Category</option>
-    </select>
-  </div>
+    <main class="page-shell analytics-main">
+      <p
+        id="analyticsYearRange"
+        class="school-year-range school-year-range-light"
+      ></p>
 
-  <div class="chart-container" style="max-width: 900px; margin: 0 auto;">
-    <canvas id="budgetChart"></canvas>
-  </div>
+      <section
+        class="summary-grid analytics-summary"
+        aria-label="Budget summary"
+      >
+        <div class="summary-card light-card summary-primary-light">
+          <span class="summary-label">Current balance</span>
+          <strong class="summary-value"
+            >$<span id="analyticsBalance">0.00</span></strong
+          >
+        </div>
+        <div class="summary-card light-card">
+          <span class="summary-label">Money in</span>
+          <strong class="summary-value summary-positive"
+            >$<span id="analyticsIncome">0.00</span></strong
+          >
+        </div>
+        <div class="summary-card light-card">
+          <span class="summary-label">Money out</span>
+          <strong class="summary-value summary-negative"
+            >$<span id="analyticsExpense">0.00</span></strong
+          >
+        </div>
+      </section>
 
-  <script type="module" src="./scripts/firebase-init.js"></script>
-  <script type="module" src="./scripts/chart.js"></script>
-</body>
+      <section class="panel chart-panel">
+        <div class="panel-heading chart-heading">
+          <div>
+            <p class="eyebrow dark">
+              Breakdown · <span id="chartSchoolYear">School year</span>
+            </p>
+            <h2 id="chartTitle">Income by event</h2>
+          </div>
+          <label class="select-field chart-select" for="chartModeSelector">
+            <span class="sr-only">Choose chart view</span>
+            <select id="chartModeSelector">
+              <option value="incomeEvent">Income by Event</option>
+              <option value="expenseEvent">Spending by Event</option>
+              <option value="incomeCategory">Income by Category</option>
+              <option value="expenseCategory">Spending by Category</option>
+              <option value="netEvent">Net by Event</option>
+              <option value="netCategory">Net by Category</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="chart-container">
+          <canvas id="budgetChart"></canvas>
+        </div>
+        <div id="chartEmpty" class="empty-state hidden">
+          <h3>No data for this school year</h3>
+          <p>Choose another school year or add transactions in Admin.</p>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="./scripts/firebase-init.js"></script>
+    <script type="module" src="./scripts/chart.js"></script>
+  </body>
 </html>

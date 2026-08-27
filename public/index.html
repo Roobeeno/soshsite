@@ -1,43 +1,127 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sosh Comm Budgeting — Read-only</title>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles/tablestyle.css" />
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#123a63" />
+    <title>Soshcomm Budget Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles/tablestyle.css" />
+  </head>
+  <body class="readonly">
+    <header class="site-header hero-header">
+      <nav class="topnav page-shell" aria-label="Primary navigation">
+        <a class="brand" href="index.html">Soshcomm</a>
+        <div class="nav-links">
+          <a class="nav-link active" href="index.html">Transactions</a>
+          <a class="nav-link" href="chart.html">Analytics</a>
+          <a class="nav-link nav-admin" href="manage.html">Admin</a>
+        </div>
+      </nav>
 
-</head>
-<body class = "readonly">
+      <div class="hero-content page-shell">
+        <div class="hero-title-row">
+          <div>
+            <p class="eyebrow">Budget tracker</p>
+            <h1>Know where the money is going.</h1>
+            <p class="hero-copy">
+              A clear, live view of Soshcomm spending and cash flow.
+            </p>
+          </div>
+          <label
+            class="school-year-control school-year-control-dark"
+            for="schoolYearSelector"
+          >
+            <span>School year</span>
+            <select
+              id="schoolYearSelector"
+              aria-label="Choose school year"
+            ></select>
+          </label>
+        </div>
 
-    <ul style="float: right;">
-        <a class="active" style="margin: 10px; font-family: Montserrat" href="manage.html">Admin</a>
-        <a class="active" style="margin: 10px; font-family: Montserrat" href="chart.html">Chart</a>
-    </ul>
+        <div class="summary-grid" aria-label="Budget summary">
+          <div class="summary-card summary-primary">
+            <span class="summary-label">Current balance</span>
+            <strong class="summary-value"
+              >$<span id="totalAmount">0.00</span></strong
+            >
+          </div>
+          <div class="summary-card">
+            <span class="summary-label">Money in</span>
+            <strong class="summary-value summary-positive"
+              >$<span id="incomeTotal">0.00</span></strong
+            >
+          </div>
+          <div class="summary-card">
+            <span class="summary-label">Money out</span>
+            <strong class="summary-value summary-negative"
+              >$<span id="expenseTotal">0.00</span></strong
+            >
+          </div>
+        </div>
+        <p id="schoolYearRange" class="school-year-range"></p>
+      </div>
+    </header>
 
-  <h1 class="page-title">THe Soshcomm Budget Tracker</h1>
+    <main class="page-shell content-shell">
+      <section class="section-heading">
+        <div>
+          <p class="eyebrow dark">
+            Activity · <span id="activitySchoolYear">School year</span>
+          </p>
+          <h2>
+            Transactions
+            <span id="transactionCount" class="count-badge">0</span>
+          </h2>
+        </div>
 
-  <h2 style="margin:6px 0 0; margin-right: 63%;">Current Balance: $<span id="totalAmount">0.00</span></h2>
+        <div class="transaction-tools">
+          <label class="search-field" for="transactionSearch">
+            <span class="sr-only">Search transactions</span>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none">
+              <path
+                d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            </svg>
+            <input
+              id="transactionSearch"
+              type="search"
+              placeholder="Search transactions"
+              autocomplete="off"
+            />
+          </label>
 
-<div class="sortbar" style="text-align:center; margin-left: 60%; margin-bottom: 10px;">
-  <label style="margin-right:8px;">Sort by</label>
-  <select id="sortField">
-    <option value="date">Date</option>
-    <option value="amount">Amount</option>
-    <option value="event">Event</option>
-    <option value="category">Category</option>
-  </select>
-  <select id="sortDir" style="margin-left:8px;">
-    <option value="desc">Descending</option>
-    <option value="asc">Ascending</option>
-  </select>
-</div>
+          <label class="select-field" for="sortPreset">
+            <span class="sr-only">Sort transactions</span>
+            <select id="sortPreset">
+              <option value="date-desc">Newest first</option>
+              <option value="date-asc">Oldest first</option>
+              <option value="amount-asc">Lowest amount first</option>
+              <option value="amount-desc">Highest amount first</option>
+              <option value="event-asc">Event A–Z</option>
+              <option value="category-asc">Category A–Z</option>
+            </select>
+          </label>
+        </div>
+      </section>
 
-<div class="scroll-container">
-  <div id="cards" class="cards"></div>
-</div>
-  <script type="module" src="./scripts/firebase-init.js"></script>
-  <script type="module" src="./scripts/main-readonly.js"></script>
-  <script type="module" src="/scripts/upload-bandsmen.js"></script>
-</body>
+      <div id="cards" class="cards" aria-live="polite"></div>
+      <div id="emptyState" class="empty-state hidden">
+        <h3>No transactions in this school year</h3>
+        <p>Choose another school year or add a transaction in Admin.</p>
+      </div>
+    </main>
+
+    <script type="module" src="./scripts/firebase-init.js"></script>
+    <script type="module" src="./scripts/main-readonly.js"></script>
+  </body>
 </html>
